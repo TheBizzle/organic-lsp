@@ -1,6 +1,6 @@
 use crate::lexer::token::Token;
 
-use crate::errors::{AnalyzerError, AnalyzerErrorType, AnalyzerWarning, AnalyzerWarningType};
+use crate::core::diagnostics::{AnalyzerError, AnalyzerErrorType, AnalyzerWarning, AnalyzerWarningType};
 
 use crate::analyzer::address::NamedVarAddress;
 use crate::analyzer::analysis::AnalysisState;

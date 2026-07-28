@@ -23,8 +23,8 @@ pub mod semantic_tokens;
 
 use crate::analyzer::address::NamedVarAddress;
 use crate::analyzer::analysis::Analysis;
-use crate::errors::LspError::LspAnalyzerError;
-use crate::errors::{error_as_diagnostic, warning_as_diagnostic};
+use crate::core::diagnostics::LspError::LspAnalyzerError;
+use crate::core::diagnostics::{error_as_diagnostic, warning_as_diagnostic};
 use crate::lexer::doc_loc::DocLoc;
 use crate::lexer::source_loc::SourceLoc;
 use crate::lexer::token::Token;

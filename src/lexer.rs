@@ -6,7 +6,7 @@ use std::ops::Range;
 
 use logos::Logos;
 
-use crate::errors::LexerError;
+use crate::core::diagnostics::LexerError;
 use crate::lexer::doc_loc::DocLoc;
 use crate::lexer::source_loc::SourceLoc;
 use crate::lexer::token::{Token, TokenType};

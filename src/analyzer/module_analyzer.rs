@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::parser::ast::{Include, Module, Statement, VarDecl};
 
-use crate::errors::AnalyzerErrorType::DuplicateVar;
+use crate::core::diagnostics::AnalyzerErrorType::DuplicateVar;
 
 use crate::analyzer::address::NamedVarAddress;
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT};

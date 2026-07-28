@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::errors::{AnalyzerError, AnalyzerWarning};
+use crate::core::diagnostics::{AnalyzerError, AnalyzerWarning};
 
 use crate::lexer::token::Token;
 
