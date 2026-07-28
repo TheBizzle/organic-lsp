@@ -35,7 +35,7 @@ use crate::parser::ast::Module;
 use crate::parser::grammar::ModuleParser;
 use LspError::{LspLexerError, LspParserError};
 
-pub fn analyze<'a>(doc_loc: &DocLoc, doc_text: &str) -> (Analysis<'a>, Vec<LspError<'a>>) {
+pub fn analyze(doc_loc: &DocLoc, doc_text: &str) -> (Analysis, Vec<LspError>) {
   let (tokens, lerrors) = lex(doc_loc, doc_text);
   let lsp_lerrors = lerrors.into_iter().map(LspLexerError).collect();
 

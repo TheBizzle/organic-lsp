@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -25,7 +24,7 @@ use crate::analyzer::organic_type::OrganicType as OT;
 use crate::analyzer::scope::{Env, Scope};
 use crate::analyzer::value::TermDefn::UserDefined;
 
-pub(super) fn crawl_expr<'a>(state: &mut AnalysisState<'a>, expr: Expr) -> Option<OT<'a>> {
+pub(super) fn crawl_expr(state: &mut AnalysisState, expr: Expr) -> Option<OT> {
   match expr {
     Expr::Call { call, .. } => crawl_function_call(state, call),
     Expr::Function { value, .. } => crawl_function_def(state, value),
@@ -45,7 +44,7 @@ pub(super) fn crawl_expr<'a>(state: &mut AnalysisState<'a>, expr: Expr) -> Optio
   }
 }
 
-pub(super) fn crawl_function_call<'a>(state: &mut AnalysisState<'a>, fn_call: FuncCall) -> Option<OT<'a>> {
+pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: FuncCall) -> Option<OT> {
   let FuncCall { func: Symbol { name, token }, args } = fn_call;
 
   match resolve_addr(state, &name) {
@@ -70,7 +69,7 @@ pub(super) fn crawl_function_call<'a>(state: &mut AnalysisState<'a>, fn_call: Fu
         .into_iter()
         .map(|Arg { name, value }| {
           let mapping = (name.name.clone(), name.token.clone());
-          let pram = ParamInfo(Cow::Owned(name.name), crawl_expr(state, value).unwrap_or(OT::Unknown), false);
+          let pram = ParamInfo(name.name, crawl_expr(state, value).unwrap_or(OT::Unknown), false);
           (mapping, pram)
         })
         .collect();
@@ -84,12 +83,12 @@ pub(super) fn crawl_function_call<'a>(state: &mut AnalysisState<'a>, fn_call: Fu
             .params
             .clone()
             .into_iter()
-            .map(|ParamInfo(name, typ, is_optional)| (name.into_owned(), (typ, is_optional)))
+            .map(|ParamInfo(name, typ, is_optional)| (name, (typ, is_optional)))
             .collect();
 
           let mut actuals: HashMap<_, _> = actual_args
             .into_iter()
-            .map(|ParamInfo(name, typ, is_optional)| (name.into_owned(), (typ, is_optional)))
+            .map(|ParamInfo(name, typ, is_optional)| (name, (typ, is_optional)))
             .collect();
 
           let keys: HashSet<_> = expecteds.keys().cloned().chain(actuals.keys().cloned()).collect();
@@ -130,7 +129,7 @@ pub(super) fn crawl_function_call<'a>(state: &mut AnalysisState<'a>, fn_call: Fu
   }
 }
 
-fn crawl_function_def<'a>(state: &mut AnalysisState<'a>, func: FuncLiteral) -> Option<OT<'a>> {
+fn crawl_function_def(state: &mut AnalysisState, func: FuncLiteral) -> Option<OT> {
   let FuncLiteral { formals, body, .. } = func;
 
   let param_pairs = {
@@ -145,7 +144,7 @@ fn crawl_function_def<'a>(state: &mut AnalysisState<'a>, func: FuncLiteral) -> O
           known_names.insert(name.name.clone());
         }
         let typ = crawl_expr(state, default)?;
-        Some((name.token, ParamInfo(Cow::Owned(name.name), typ, true)))
+        Some((name.token, ParamInfo(name.name, typ, true)))
       })
       .collect::<Option<Vec<_>>>()?
   };
@@ -156,9 +155,9 @@ fn crawl_function_def<'a>(state: &mut AnalysisState<'a>, func: FuncLiteral) -> O
   Some(OT::Function(Arc::new(Function { params, return_type })))
 }
 
-fn crawl_fn_body<'a>(
-  state: &mut AnalysisState<'a>, mut body: Vec<Statement>, params: &Vec<(Token, ParamInfo<'a>)>,
-) -> OT<'a> {
+fn crawl_fn_body(
+  state: &mut AnalysisState, mut body: Vec<Statement>, params: &Vec<(Token, ParamInfo)>,
+) -> OT {
   if let Some(last) = body.pop() {
     let statements = body;
     let (decls, fn_calls): (Vec<_>, Vec<_>) =
@@ -179,8 +178,7 @@ fn crawl_fn_body<'a>(
     let env = {
       let mut bindings = HashMap::new();
 
-      for (token, ParamInfo(name_cow, typ, _)) in params {
-        let name = name_cow.to_string();
+      for (token, ParamInfo(name, typ, _)) in params {
         let my_addr = NamedVarAddress { name: name.clone(), scope_addr: address.clone() };
         let defn_info = DefnInfo { hl_type: HLT::Parameter, token: token.clone() };
 
@@ -188,7 +186,7 @@ fn crawl_fn_body<'a>(
         state.analysis.defn_infos.insert(my_addr.clone(), defn_info);
         state.analysis.usages.insert(my_addr.clone(), HashSet::from([token.clone()]));
         state.vars.insert(my_addr.clone(), typ.clone());
-        bindings.insert(name, my_addr);
+        bindings.insert(name.clone(), my_addr);
       }
 
       Env { bindings }
@@ -220,7 +218,7 @@ fn crawl_fn_body<'a>(
   }
 }
 
-fn crawl_list<'a>(state: &mut AnalysisState<'a>, values: Vec<Expr>) -> Option<OT<'a>> {
+fn crawl_list(state: &mut AnalysisState, values: Vec<Expr>) -> Option<OT> {
   let mut types = values.into_iter().map(|value| crawl_expr(state, value)).collect::<Option<Vec<_>>>()?;
   if types.is_empty() {
     Some(OT::List(Box::new(OT::Unknown)))
@@ -234,7 +232,7 @@ fn crawl_list<'a>(state: &mut AnalysisState<'a>, values: Vec<Expr>) -> Option<OT
   }
 }
 
-fn crawl_lvalue<'a>(state: &mut AnalysisState<'a>, name: &Symbol, token: Token) -> Option<OT<'a>> {
+fn crawl_lvalue(state: &mut AnalysisState, name: &Symbol, token: Token) -> Option<OT> {
   if Some(name.name.clone()) == state.initting_var_opt {
     push_error(state, token.clone(), VarCannotInitInTermsOfSelf);
   }
@@ -253,7 +251,7 @@ fn crawl_lvalue<'a>(state: &mut AnalysisState<'a>, name: &Symbol, token: Token) 
   }
 }
 
-fn crawl_negated<'a>(state: &mut AnalysisState<'a>, expr: Expr, token: Token) -> Option<OT<'a>> {
+fn crawl_negated(state: &mut AnalysisState, expr: Expr, token: Token) -> Option<OT> {
   let typ = crawl_expr(state, expr)?;
   if typ == OT::Number {
     Some(typ)
@@ -263,7 +261,7 @@ fn crawl_negated<'a>(state: &mut AnalysisState<'a>, expr: Expr, token: Token) ->
   }
 }
 
-fn crawl_op<'a>(state: &mut AnalysisState<'a>, left: Expr, op: &Operator, right: Expr) -> OT<'a> {
+fn crawl_op(state: &mut AnalysisState, left: Expr, op: &Operator, right: Expr) -> OT {
   let left_token = left.get_token();
   if let Some(got) = crawl_expr(state, left)
     && got != OT::Number

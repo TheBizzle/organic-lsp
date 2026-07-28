@@ -6,10 +6,10 @@ use crate::lexer::source_loc::{MiniLoc, SourceLoc};
 use crate::lexer::token::Token;
 
 #[derive(Debug)]
-pub enum LspError<'a> {
+pub enum LspError {
   LspLexerError(LexerError),
   LspParserError(ParserError),
-  LspAnalyzerError(AnalyzerError<'a>),
+  LspAnalyzerError(AnalyzerError),
 }
 
 #[derive(Debug)]
@@ -28,8 +28,8 @@ pub enum ParserError {
 }
 
 #[derive(Debug)]
-pub struct AnalyzerError<'a> {
-  pub typ: AnalyzerErrorType<'a>,
+pub struct AnalyzerError {
+  pub typ: AnalyzerErrorType,
   pub offender: Token,
 }
 
@@ -47,15 +47,15 @@ pub enum AnalyzerWarningType {
 }
 
 #[derive(Debug)]
-pub enum AnalyzerErrorType<'a> {
+pub enum AnalyzerErrorType {
   BadInternalState,
   DuplicateParameter,
   DuplicateVar,
   ExtraArgument { name: String },
-  MissingArgument { name: String, typ: OrganicType<'a> },
+  MissingArgument { name: String, typ: OrganicType },
   NoSuchFn,
   NoSuchVariable,
-  TypeMismatch { expected: OrganicType<'a>, got: OrganicType<'a> },
+  TypeMismatch { expected: OrganicType, got: OrganicType },
   VarCannotInitInTermsOfSelf,
 }
 

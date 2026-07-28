@@ -138,7 +138,7 @@ mod tests {
     backend.documents.read().await.get(&DocLoc::new(mini_uri)).unwrap().diagnostics.clone()
   }
 
-  fn new_backend_service() -> LspService<LspBackend<'static>> {
+  fn new_backend_service() -> LspService<LspBackend> {
     let (service, _socket) = LspService::new(LspBackend::new);
     service
   }

@@ -5,7 +5,7 @@ use crate::core::diagnostics::{AnalyzerError, AnalyzerWarning};
 use crate::lexer::token::Token;
 
 use crate::analyzer::address::{NamedVarAddress, ScopeAddress};
-use crate::analyzer::builtins::{INITIAL_SCOPE_ADDRESS, initial_state};
+use crate::analyzer::builtins::{BuiltIns, INITIAL_SCOPE_ADDRESS, initial_state};
 use crate::analyzer::organic_type::OrganicType;
 use crate::analyzer::scope::{Env, Scope};
 use crate::analyzer::value::TermDefn;
@@ -24,10 +24,10 @@ pub struct DefnInfo {
 }
 
 #[derive(Debug)]
-pub struct Analysis<'a> {
-  pub definitions: HashMap<NamedVarAddress, TermDefn<'a>>,
+pub struct Analysis {
+  pub definitions: HashMap<NamedVarAddress, TermDefn>,
   pub defn_infos: HashMap<NamedVarAddress, DefnInfo>,
-  pub errors: Vec<AnalyzerError<'a>>,
+  pub errors: Vec<AnalyzerError>,
   pub named_arg_tokens: Vec<Token>,
   pub number_tokens: Vec<Token>,
   pub string_tokens: Vec<Token>,
@@ -35,9 +35,9 @@ pub struct Analysis<'a> {
   pub warnings: Vec<AnalyzerWarning>,
 }
 
-impl<'a> Analysis<'a> {
+impl Analysis {
   #[must_use]
-  pub fn new(definitions: HashMap<NamedVarAddress, TermDefn<'a>>) -> Self {
+  pub fn new(definitions: HashMap<NamedVarAddress, TermDefn>) -> Self {
     let usages: HashMap<_, _> = definitions.keys().map(|addr| (addr.clone(), HashSet::new())).collect();
     Self {
       definitions,
@@ -53,17 +53,17 @@ impl<'a> Analysis<'a> {
 }
 
 #[derive(Debug)]
-pub struct AnalysisState<'a> {
-  pub analysis: Analysis<'a>,
+pub struct AnalysisState {
+  pub analysis: Analysis,
   pub initting_var_opt: Option<String>,
   pub last_scope_addr: ScopeAddress,
   pub scopes: Vec<Scope>,
-  pub vars: HashMap<NamedVarAddress, OrganicType<'a>>,
+  pub vars: HashMap<NamedVarAddress, OrganicType>,
 }
 
-impl Default for AnalysisState<'_> {
+impl Default for AnalysisState {
   fn default() -> Self {
-    let (bindings, vars, defs) = initial_state();
+    let BuiltIns { bindings, defs, vars } = initial_state();
     Self {
       analysis: Analysis::new(defs),
       initting_var_opt: None,

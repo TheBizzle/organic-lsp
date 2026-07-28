@@ -14,7 +14,7 @@ use crate::parser::ast::Module;
 use analysis::{Analysis, AnalysisState};
 
 #[must_use]
-pub fn analyze<'a>(module: Module) -> Analysis<'a> {
+pub fn analyze(module: Module) -> Analysis {
   let mut state = AnalysisState::default();
   module_analyzer::run(&mut state, module);
   state.analysis

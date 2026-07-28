@@ -41,7 +41,7 @@ enum Modifier {
   _Mod3,
 }
 
-pub async fn calc_semantic_tokens(doc_loc: &DocLoc, document: &Document<'_>) -> Option<SemanticTokensResult> {
+pub async fn calc_semantic_tokens(doc_loc: &DocLoc, document: &Document) -> Option<SemanticTokensResult> {
   let (tokens, _) = lex(doc_loc, &document.contents);
 
   let mut last_loc = SourceLoc { doc_loc: doc_loc.clone(), pos: 0, line: 1, column: 1, length: 0 };

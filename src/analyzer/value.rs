@@ -44,9 +44,9 @@ pub enum PitchClass {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum TermDefn<'a> {
+pub enum TermDefn {
   BuiltinConstant { value: ConstantValue },
-  BuiltinFn { value: Function<'a> },
+  BuiltinFn { value: Function },
   BuiltinNote { note: Note },
   UserDefined { token: Token },
 }

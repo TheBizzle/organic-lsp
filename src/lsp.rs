@@ -39,7 +39,7 @@ use Entity::LValue;
 
 const DEBUG: MessageType = MessageType::ERROR;
 
-impl LanguageServer for LspBackend<'static> {
+impl LanguageServer for LspBackend {
   async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
     Ok(InitializeResult {
       capabilities: ServerCapabilities {
@@ -193,7 +193,7 @@ impl LanguageServer for LspBackend<'static> {
   }
 }
 
-async fn store_and_reanalyze(this: &LspBackend<'_>, uri: Uri, text: String) {
+async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: String) {
   let doc_loc = DocLoc::new(uri.to_string());
 
   let (

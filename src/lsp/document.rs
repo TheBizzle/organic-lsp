@@ -11,8 +11,8 @@ use crate::analyzer::value::TermDefn;
 use crate::lexer::token::Token;
 
 #[derive(Debug, PartialEq)]
-pub struct LValueInfo<'a> {
-  pub definition: TermDefn<'a>,
+pub struct LValueInfo {
+  pub definition: TermDefn,
   pub defn_info_opt: Option<DefnInfo>,
   pub usages: HashSet<Token>,
 }
@@ -27,9 +27,9 @@ pub enum Entity {
 }
 
 #[derive(Debug)]
-pub struct Document<'a> {
+pub struct Document {
   pub contents: String,
   pub diagnostics: Vec<Diagnostic>,
   pub entities: Vec<RangeMap<u32, Entity>>,
-  pub infos: HashMap<NamedVarAddress, Arc<LValueInfo<'a>>>,
+  pub infos: HashMap<NamedVarAddress, Arc<LValueInfo>>,
 }

@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::f64::consts;
 use std::sync::{Arc, LazyLock};
@@ -21,25 +20,23 @@ pub struct Constant {
 
 pub struct StdLibFn {
   name: &'static str,
-  func: Function<'static>,
+  func: Function,
+}
+
+#[derive(Clone)]
+pub struct BuiltIns {
+  pub bindings: HashMap<String, NamedVarAddress>,
+  pub defs: HashMap<NamedVarAddress, TermDefn>,
+  pub vars: HashMap<NamedVarAddress, OrganicType>,
 }
 
 #[must_use]
-pub fn initial_state() -> (
-  HashMap<String, NamedVarAddress>,
-  HashMap<NamedVarAddress, OrganicType<'static>>,
-  HashMap<NamedVarAddress, TermDefn<'static>>,
-) {
-  let (bindings, vars, defs) = &*INITIAL_STATE;
-  (bindings.clone(), vars.clone(), defs.clone())
+pub fn initial_state() -> BuiltIns {
+  (*INITIAL_STATE).clone()
 }
 
 #[allow(clippy::type_complexity)]
-static INITIAL_STATE: LazyLock<(
-  HashMap<String, NamedVarAddress>,
-  HashMap<NamedVarAddress, OrganicType<'static>>,
-  HashMap<NamedVarAddress, TermDefn<'static>>,
-)> = LazyLock::new(|| {
+static INITIAL_STATE: LazyLock<BuiltIns> = LazyLock::new(|| {
   let scope_addr = INITIAL_SCOPE_ADDRESS;
 
   let (const_defs, constants): (HashMap<_, _>, HashMap<_, _>) = CONSTANTS
@@ -77,10 +74,10 @@ static INITIAL_STATE: LazyLock<(
   let bindings: HashMap<_, _> = vars.keys().map(|addr| (addr.name.clone(), addr.clone())).collect();
   let defs = const_defs.into_iter().chain(func_defs).chain(note_defs).collect();
 
-  (bindings, vars, defs)
+  BuiltIns { bindings, defs, vars }
 });
 
-fn value_to_type<'a>(value: ConstantValue) -> OrganicType<'a> {
+fn value_to_type(value: ConstantValue) -> OrganicType {
   match value {
     CV::AudioEffect => OT::AudioEffect,
     CV::Boolean(_) => OT::Boolean,
@@ -99,12 +96,12 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
   [
     StdLibFn {
       name: "absolute",
-      func: Function { params: vec![PI(cb("value"), OT::Number, false)], return_type: OT::Number },
+      func: Function { params: vec![PI(own("value"), OT::Number, false)], return_type: OT::Number },
     },
     StdLibFn {
       name: "all",
       func: Function {
-        params: vec![PI(cb("values"), OT::List(Box::new(OT::Boolean)), false)],
+        params: vec![PI(own("values"), OT::List(Box::new(OT::Boolean)), false)],
         return_type: OT::Boolean,
       },
     },
@@ -112,9 +109,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "all-pass",
       func: Function {
         params: vec![
-          PI(cb("feedback"), OT::Number, false),
-          PI(cb("delay"), OT::Number, false),
-          PI(cb("mix"), OT::Number, true),
+          PI(own("feedback"), OT::Number, false),
+          PI(own("delay"), OT::Number, false),
+          PI(own("mix"), OT::Number, true),
         ],
         return_type: OT::AudioEffect,
       },
@@ -122,7 +119,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
     StdLibFn {
       name: "any",
       func: Function {
-        params: vec![PI(cb("values"), OT::List(Box::new(OT::Boolean)), false)],
+        params: vec![PI(own("values"), OT::List(Box::new(OT::Boolean)), false)],
         return_type: OT::Boolean,
       },
     },
@@ -130,9 +127,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "comb",
       func: Function {
         params: vec![
-          PI(cb("feedback"), OT::Number, false),
-          PI(cb("delay"), OT::Number, false),
-          PI(cb("mix"), OT::Number, true),
+          PI(own("feedback"), OT::Number, false),
+          PI(own("delay"), OT::Number, false),
+          PI(own("mix"), OT::Number, true),
         ],
         return_type: OT::AudioEffect,
       },
@@ -141,9 +138,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "delay",
       func: Function {
         params: vec![
-          PI(cb("feedback"), OT::Number, false),
-          PI(cb("delay"), OT::Number, false),
-          PI(cb("mix"), OT::Number, true),
+          PI(own("feedback"), OT::Number, false),
+          PI(own("delay"), OT::Number, false),
+          PI(own("mix"), OT::Number, true),
         ],
         return_type: OT::AudioEffect,
       },
@@ -152,8 +149,8 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "effect-group",
       func: Function {
         params: vec![
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), false),
-          PI(cb("mix"), OT::Number, true),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), false),
+          PI(own("mix"), OT::Number, true),
         ],
         return_type: OT::AudioEffect,
       },
@@ -163,19 +160,19 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       func: Function {
         params: vec![
           PI(
-            cb("shape"),
+            own("shape"),
             OT::Function(Arc::new(Function {
-              params: vec![PI(cb("value"), OT::Number, false)],
+              params: vec![PI(own("value"), OT::Number, false)],
               return_type: OT::Number,
             })),
             true,
           ),
-          PI(cb("length"), OT::Number, true),
-          PI(cb("grains"), OT::Number, true),
-          PI(cb("sample"), OT::String, false),
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("length"), OT::Number, true),
+          PI(own("grains"), OT::Number, true),
+          PI(own("sample"), OT::String, false),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -184,10 +181,10 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "group",
       func: Function {
         params: vec![
-          PI(cb("sources"), OT::List(Box::new(OT::Number)), false),
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("sources"), OT::List(Box::new(OT::Number)), false),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -195,7 +192,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
     StdLibFn {
       name: "hold",
       func: Function {
-        params: vec![PI(cb("length"), OT::Number, false), PI(cb("value"), OT::Number, false)],
+        params: vec![PI(own("length"), OT::Number, false), PI(own("value"), OT::Number, false)],
         return_type: OT::Number,
       },
     },
@@ -203,9 +200,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "if",
       func: Function {
         params: vec![
-          PI(cb("is-false"), OT::Number, false),
-          PI(cb("is-true"), OT::Number, false),
-          PI(cb("condition"), OT::Boolean, false),
+          PI(own("is-false"), OT::Number, false),
+          PI(own("is-true"), OT::Number, false),
+          PI(own("condition"), OT::Boolean, false),
         ],
         return_type: OT::Number,
       },
@@ -214,9 +211,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "lfo",
       func: Function {
         params: vec![
-          PI(cb("length"), OT::Number, false),
-          PI(cb("to"), OT::Number, false),
-          PI(cb("from"), OT::Number, false),
+          PI(own("length"), OT::Number, false),
+          PI(own("to"), OT::Number, false),
+          PI(own("from"), OT::Number, false),
         ],
         return_type: OT::Number,
       },
@@ -225,28 +222,28 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "limit",
       func: Function {
         params: vec![
-          PI(cb("max"), OT::Number, false),
-          PI(cb("min"), OT::Number, false),
-          PI(cb("value"), OT::Number, false),
+          PI(own("max"), OT::Number, false),
+          PI(own("min"), OT::Number, false),
+          PI(own("value"), OT::Number, false),
         ],
         return_type: OT::Number,
       },
     },
     StdLibFn {
       name: "low-pass",
-      func: Function { params: vec![PI(cb("threshold"), OT::Number, false)], return_type: OT::Number },
+      func: Function { params: vec![PI(own("threshold"), OT::Number, false)], return_type: OT::Number },
     },
     StdLibFn {
       name: "max",
       func: Function {
-        params: vec![PI(cb("values"), OT::List(Box::new(OT::Number)), false)],
+        params: vec![PI(own("values"), OT::List(Box::new(OT::Number)), false)],
         return_type: OT::Number,
       },
     },
     StdLibFn {
       name: "min",
       func: Function {
-        params: vec![PI(cb("values"), OT::List(Box::new(OT::Number)), false)],
+        params: vec![PI(own("values"), OT::List(Box::new(OT::Number)), false)],
         return_type: OT::Number,
       },
     },
@@ -254,9 +251,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "noise",
       func: Function {
         params: vec![
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -264,7 +261,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
     StdLibFn {
       name: "none",
       func: Function {
-        params: vec![PI(cb("values"), OT::List(Box::new(OT::Boolean)), false)],
+        params: vec![PI(own("values"), OT::List(Box::new(OT::Boolean)), false)],
         return_type: OT::Boolean,
       },
     },
@@ -273,17 +270,17 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       func: Function {
         params: vec![
           PI(
-            cb("waveform"),
+            own("waveform"),
             OT::Function(Arc::new(Function {
-              params: vec![PI(cb("phase"), OT::Number, false)],
+              params: vec![PI(own("phase"), OT::Number, false)],
               return_type: OT::Number,
             })),
             false,
           ),
-          PI(cb("frequency"), OT::Number, false),
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("frequency"), OT::Number, false),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -292,10 +289,10 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "random",
       func: Function {
         params: vec![
-          PI(cb("type"), OT::RandomArg, true),
-          PI(cb("length"), OT::Number, false),
-          PI(cb("to"), OT::Number, false),
-          PI(cb("from"), OT::Number, false),
+          PI(own("type"), OT::RandomArg, true),
+          PI(own("length"), OT::Number, false),
+          PI(own("to"), OT::Number, false),
+          PI(own("from"), OT::Number, false),
         ],
         return_type: OT::Number,
       },
@@ -303,14 +300,14 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
     StdLibFn {
       name: "repeat",
       func: Function {
-        params: vec![PI(cb("repeats"), OT::Number, true), PI(cb("value"), OT::Number, false)],
+        params: vec![PI(own("repeats"), OT::Number, true), PI(own("value"), OT::Number, false)],
         return_type: OT::Number,
       },
     },
     StdLibFn {
       name: "reverb",
       func: Function {
-        params: vec![PI(cb("length"), OT::Number, false), PI(cb("mix"), OT::Number, true)],
+        params: vec![PI(own("length"), OT::Number, false), PI(own("mix"), OT::Number, true)],
         return_type: OT::AudioEffect,
       },
     },
@@ -318,9 +315,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "round",
       func: Function {
         params: vec![
-          PI(cb("direction"), OT::RoundArg, true),
-          PI(cb("step"), OT::Number, true),
-          PI(cb("value"), OT::Number, false),
+          PI(own("direction"), OT::RoundArg, true),
+          PI(own("step"), OT::Number, true),
+          PI(own("value"), OT::Number, false),
         ],
         return_type: OT::Number,
       },
@@ -329,10 +326,10 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "sample",
       func: Function {
         params: vec![
-          PI(cb("file"), OT::String, false),
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("file"), OT::String, false),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -341,10 +338,10 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "saw",
       func: Function {
         params: vec![
-          PI(cb("frequency"), OT::Number, false),
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("frequency"), OT::Number, false),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -353,8 +350,8 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "sequence",
       func: Function {
         params: vec![
-          PI(cb("order"), OT::SequenceArg, true),
-          PI(cb("values"), OT::List(Box::new(OT::Number)), false),
+          PI(own("order"), OT::SequenceArg, true),
+          PI(own("values"), OT::List(Box::new(OT::Number)), false),
         ],
         return_type: OT::Number,
       },
@@ -363,10 +360,10 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "sine",
       func: Function {
         params: vec![
-          PI(cb("frequency"), OT::Number, false),
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("frequency"), OT::Number, false),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -375,10 +372,10 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "square",
       func: Function {
         params: vec![
-          PI(cb("frequency"), OT::Number, false),
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("frequency"), OT::Number, false),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -387,9 +384,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "sweep",
       func: Function {
         params: vec![
-          PI(cb("length"), OT::Number, false),
-          PI(cb("to"), OT::Number, false),
-          PI(cb("from"), OT::Number, false),
+          PI(own("length"), OT::Number, false),
+          PI(own("to"), OT::Number, false),
+          PI(own("from"), OT::Number, false),
         ],
         return_type: OT::Number,
       },
@@ -399,10 +396,10 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "triangle",
       func: Function {
         params: vec![
-          PI(cb("frequency"), OT::Number, false),
-          PI(cb("effects"), OT::List(Box::new(OT::AudioEffect)), true),
-          PI(cb("pan"), OT::Number, true),
-          PI(cb("volume"), OT::Number, true),
+          PI(own("frequency"), OT::Number, false),
+          PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
+          PI(own("pan"), OT::Number, true),
+          PI(own("volume"), OT::Number, true),
         ],
         return_type: OT::Number,
       },
@@ -410,7 +407,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
     StdLibFn {
       name: "trigger",
       func: Function {
-        params: vec![PI(cb("value"), OT::Number, false), PI(cb("condition"), OT::Boolean, false)],
+        params: vec![PI(own("value"), OT::Number, false), PI(own("condition"), OT::Boolean, false)],
         return_type: OT::Number,
       },
     },
@@ -469,6 +466,6 @@ static NOTES: LazyLock<HashMap<String, Note>> = LazyLock::new(|| {
     .collect()
 });
 
-const fn cb<T: ?Sized + ToOwned>(value: &T) -> Cow<'_, T> {
-  Cow::Borrowed(value)
+fn own(value: &str) -> String {
+  value.to_owned()
 }

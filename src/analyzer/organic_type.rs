@@ -3,10 +3,10 @@ use std::sync::Arc;
 use crate::analyzer::function::Function as Func;
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub enum OrganicType<'a> {
+pub enum OrganicType {
   AudioEffect,
   Boolean,
-  Function(Arc<Func<'a>>),
+  Function(Arc<Func>),
   List(Box<Self>),
   Number,
   RandomArg,

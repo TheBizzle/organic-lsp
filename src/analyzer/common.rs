@@ -4,7 +4,7 @@ use crate::core::diagnostics::{AnalyzerError, AnalyzerErrorType, AnalyzerWarning
 
 use crate::analyzer::address::NamedVarAddress;
 use crate::analyzer::analysis::AnalysisState;
-use crate::analyzer::organic_type::OrganicType as OT;
+use crate::analyzer::organic_type::OrganicType;
 
 pub(super) fn resolve_addr(state: &mut AnalysisState, name: &str) -> Option<NamedVarAddress> {
   for scope in state.scopes.iter_mut().rev() {
@@ -15,7 +15,7 @@ pub(super) fn resolve_addr(state: &mut AnalysisState, name: &str) -> Option<Name
   None
 }
 
-pub(super) fn resolve_type<'a>(state: &AnalysisState<'a>, addr: &NamedVarAddress) -> OT<'a> {
+pub(super) fn resolve_type(state: &AnalysisState, addr: &NamedVarAddress) -> OrganicType {
   state
     .vars
     .get(addr)
@@ -26,6 +26,6 @@ pub(super) fn push_warning(state: &mut AnalysisState, token: Token, typ: Analyze
   state.analysis.warnings.push(AnalyzerWarning { typ, offender: token });
 }
 
-pub(super) fn push_error<'a>(state: &mut AnalysisState<'a>, token: Token, typ: AnalyzerErrorType<'a>) {
+pub(super) fn push_error(state: &mut AnalysisState, token: Token, typ: AnalyzerErrorType) {
   state.analysis.errors.push(AnalyzerError { typ, offender: token });
 }
