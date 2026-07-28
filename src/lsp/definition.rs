@@ -9,7 +9,9 @@ pub fn describe_defn(defn: &TermDefn) -> String {
     TermDefn::BuiltinConstant { value } => format!("Built-in constant: {}", describe_constant(value)),
     TermDefn::BuiltinFn { value } => format!("Built-in function: {}", describe_function(value)),
     TermDefn::BuiltinNote { note } => {
-      format!("Built-in note: {} ({})", describe_note(note), calculate_note(note))
+      let hertz = calculate_note(note);
+      let hertz_3_decimals = (hertz * 1000.0).round() / 1000.0;
+      format!("Built-in note: {} ({})", describe_note(note), hertz_3_decimals)
     },
     TermDefn::UserDefined { token } => format!("User-defined value: {token:?}"), // TODO: Get
                                                                                  // type info
@@ -52,10 +54,10 @@ fn describe_note(note: &Note) -> String {
   format!("{pc}{acci}{octave}")
 }
 
-fn calculate_note(note: &Note) -> u8 {
+fn calculate_note(note: &Note) -> f64 {
   let Note { pitch_class, accidental, octave } = note;
 
-  let semitones_above_c = match pitch_class {
+  let semitones_above_c: i32 = match pitch_class {
     PC::C => 0,
     PC::D => 2,
     PC::E => 4,
@@ -65,13 +67,14 @@ fn calculate_note(note: &Note) -> u8 {
     PC::B => 11,
   };
 
-  let acci = match accidental {
-    Accidental::Flat => 0,
-    Accidental::Natural => 1,
-    Accidental::Sharp => 2,
+  let acci: i32 = match accidental {
+    Accidental::Flat => -1,
+    Accidental::Natural => 0,
+    Accidental::Sharp => 1,
   };
 
-  semitones_above_c + (octave * 12) + acci - 1 // TODO: cb0 will underflow this
+  let semis = 12 * (i32::from(*octave) + 1) + semitones_above_c + acci;
+  440.0 * ((f64::from(semis) - 69.0) / 12.0).exp2()
 }
 
 fn describe_function(func: &Function) -> String {

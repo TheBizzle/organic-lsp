@@ -436,11 +436,7 @@ static NOTES: LazyLock<HashMap<String, Note>> = LazyLock::new(|| {
   PitchClass::iter()
     .flat_map(|pitch_class| Accidental::iter().map(move |accidental| (pitch_class.clone(), accidental)))
     .flat_map(|(pitch, acci)| {
-      let start = match (pitch.clone(), acci.clone()) {
-        (PitchClass::C, Accidental::Flat) => 1,
-        _ => 0,
-      };
-      (start..=9).map(move |octave| Note { pitch_class: pitch.clone(), accidental: acci.clone(), octave })
+      (0..=9).map(move |octave| Note { pitch_class: pitch.clone(), accidental: acci.clone(), octave })
     })
     .map(|note| {
       let Note { pitch_class, accidental, octave } = note.clone();
