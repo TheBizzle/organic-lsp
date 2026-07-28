@@ -55,7 +55,7 @@ fn describe_note(note: &Note) -> String {
 fn calculate_note(note: &Note) -> u8 {
   let Note { pitch_class, accidental, octave } = note;
 
-  let pc = match pitch_class {
+  let semitones_above_c = match pitch_class {
     PC::C => 0,
     PC::D => 2,
     PC::E => 4,
@@ -71,7 +71,7 @@ fn calculate_note(note: &Note) -> u8 {
     Accidental::Sharp => 2,
   };
 
-  pc + (octave * 12) + acci - 1
+  semitones_above_c + (octave * 12) + acci - 1 // TODO: cb0 will underflow this
 }
 
 fn describe_function(func: &Function) -> String {
