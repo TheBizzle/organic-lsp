@@ -28,7 +28,7 @@ use crate::analyzer;
 use crate::analyzer::analysis::Analysis;
 use crate::core::diagnostics::LspError;
 use crate::core::diagnostics::ParserError::{self, ExtraToken, FictionalToken, UnexpectedEOF, WrongToken};
-use crate::lexer::doc_loc::DocLoc;
+use crate::core::doc_loc::DocLoc;
 use crate::lexer::lex;
 use crate::lexer::token::{Token, TokenType};
 use crate::parser::ast::Module;

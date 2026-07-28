@@ -1,7 +1,7 @@
 use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 
 use crate::analyzer::organic_type::OrganicType;
-use crate::lexer::doc_loc::DocLoc;
+use crate::core::doc_loc::DocLoc;
 use crate::lexer::source_loc::{MiniLoc, SourceLoc};
 use crate::lexer::token::Token;
 

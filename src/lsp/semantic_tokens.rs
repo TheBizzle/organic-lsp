@@ -2,7 +2,7 @@ use tower_lsp_server::ls_types::{SemanticToken, SemanticTokenType, SemanticToken
 
 use crate::analyzer::analysis::{DefnInfo, HighlightingType as HLT};
 use crate::analyzer::value::TermDefn;
-use crate::lexer::doc_loc::DocLoc;
+use crate::core::doc_loc::DocLoc;
 use crate::lexer::lex;
 use crate::lexer::source_loc::SourceLoc;
 use crate::lexer::token::Token;

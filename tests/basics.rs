@@ -10,7 +10,7 @@ mod tests {
   };
   use tower_lsp_server::{LanguageServer, LspService};
 
-  use organic_lsp::lexer::doc_loc::DocLoc;
+  use organic_lsp::core::doc_loc::DocLoc;
   use organic_lsp::lsp::backend::LspBackend;
 
   #[tokio::test]

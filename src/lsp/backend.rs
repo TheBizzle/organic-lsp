@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use tokio::sync::RwLock;
 
-use crate::lexer::doc_loc::DocLoc;
+use crate::core::doc_loc::DocLoc;
 use crate::lsp::document::Document;
 use tower_lsp_server::Client;
 

@@ -1,4 +1,4 @@
-use crate::lexer::doc_loc::DocLoc;
+use crate::core::doc_loc::DocLoc;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct MiniLoc {

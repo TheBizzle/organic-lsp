@@ -1,4 +1,3 @@
-pub mod doc_loc;
 pub mod source_loc;
 pub mod token;
 
@@ -7,7 +6,7 @@ use std::ops::Range;
 use logos::Logos;
 
 use crate::core::diagnostics::LexerError;
-use crate::lexer::doc_loc::DocLoc;
+use crate::core::doc_loc::DocLoc;
 use crate::lexer::source_loc::SourceLoc;
 use crate::lexer::token::{Token, TokenType};
 
