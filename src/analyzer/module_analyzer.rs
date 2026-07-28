@@ -41,8 +41,7 @@ fn crawl_var_decl(state: &mut AnalysisState, var_decl: VarDecl) {
     state.analysis.usages.insert(my_addr.clone(), HashSet::from([var_decl.name.token.clone()]));
   }
 
-  let prev = state.initting_var_opt.clone();
-  state.initting_var_opt = Some(var_decl.name.name.clone());
+  let prev = Option::replace(&mut state.initting_var_opt, var_decl.name.name.clone());
   if let Some(typ) = crawl_expr(state, var_decl.init) {
     let hl_type = match typ {
       OT::Function(_) => HLT::Function,
