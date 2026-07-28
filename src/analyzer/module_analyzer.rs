@@ -2,9 +2,9 @@ use std::collections::HashSet;
 
 use crate::parser::ast::{Include, Module, Statement, VarDecl};
 
+use crate::core::address::NamedVarAddress;
 use crate::core::diagnostics::AnalyzerErrorType::DuplicateVar;
 
-use crate::analyzer::address::NamedVarAddress;
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT};
 use crate::analyzer::common::{push_error, resolve_addr};
 use crate::analyzer::expr_analyzer::{crawl_expr, crawl_function_call};

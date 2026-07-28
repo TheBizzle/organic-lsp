@@ -5,9 +5,9 @@ use rangemap::RangeMap;
 
 use tower_lsp_server::ls_types::Diagnostic;
 
-use crate::analyzer::address::NamedVarAddress;
 use crate::analyzer::analysis::DefnInfo;
 use crate::analyzer::value::TermDefn;
+use crate::core::address::NamedVarAddress;
 use crate::lexer::token::Token;
 
 #[derive(Debug, PartialEq)]

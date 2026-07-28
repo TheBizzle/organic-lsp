@@ -4,11 +4,11 @@ use crate::core::diagnostics::{AnalyzerError, AnalyzerWarning};
 
 use crate::lexer::token::Token;
 
-use crate::analyzer::address::{NamedVarAddress, ScopeAddress};
 use crate::analyzer::builtins::{BuiltIns, INITIAL_SCOPE_ADDRESS, initial_state};
 use crate::analyzer::organic_type::OrganicType;
 use crate::analyzer::scope::{Env, Scope};
 use crate::analyzer::value::TermDefn;
+use crate::core::address::{NamedVarAddress, ScopeAddress};
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum HighlightingType {

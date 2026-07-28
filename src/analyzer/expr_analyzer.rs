@@ -6,6 +6,8 @@ use crate::lexer::token::Token;
 use crate::parser::ast::{Arg, Expr, Formal, FuncCall, FuncLiteral, Operator, Statement, Symbol};
 use Operator::{Divide, GreaterOrEquals, GreaterThan, LessOrEquals, LessThan, Minus, Plus, Times};
 
+use crate::core::address::{NamedVarAddress, ScopeAddress};
+
 use crate::core::diagnostics::AnalyzerErrorType::{
   DuplicateParameter, ExtraArgument, MissingArgument, NoSuchFn, NoSuchVariable, TypeMismatch,
   VarCannotInitInTermsOfSelf,
@@ -15,7 +17,6 @@ use crate::core::diagnostics::AnalyzerWarningType::{
   ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody,
 };
 
-use crate::analyzer::address::{NamedVarAddress, ScopeAddress};
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT};
 use crate::analyzer::common::{push_error, push_warning, resolve_addr, resolve_type};
 use crate::analyzer::function::{Function, ParamInfo};

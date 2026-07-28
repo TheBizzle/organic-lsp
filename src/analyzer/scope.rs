@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::analyzer::address::{NamedVarAddress, ScopeAddress};
+use crate::core::address::{NamedVarAddress, ScopeAddress};
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Env {

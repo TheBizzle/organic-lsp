@@ -22,8 +22,8 @@ pub mod definition;
 pub mod document;
 pub mod semantic_tokens;
 
-use crate::analyzer::address::NamedVarAddress;
 use crate::analyzer::analysis::Analysis;
+use crate::core::address::NamedVarAddress;
 use crate::core::diagnostics::LspError::LspAnalyzerError;
 use crate::core::diagnostics::{error_as_diagnostic, warning_as_diagnostic};
 use crate::lexer::doc_loc::DocLoc;
