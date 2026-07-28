@@ -11,7 +11,7 @@ use crate::lexer::token::TokenType::{
   LeftBrace, LeftBracket, LeftParen, LessThan, LessThanEquals, Minus, Multiply, Newline, Number, Plus,
   RightBrace, RightBracket, RightParen, String, Whitespace,
 };
-use crate::lsp::lsp_backend::{Document, Entity};
+use crate::lsp::document::{Document, Entity};
 
 const LANGUAGE_CONSTANT: SemanticTokenType = SemanticTokenType::new("language_constant");
 
