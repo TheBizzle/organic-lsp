@@ -4,7 +4,7 @@ use tokio::net::TcpListener;
 
 use tower_lsp_server::{LspService, Server};
 
-use organic_lsp::lsp::lsp_backend::LspBackend;
+use organic_lsp::lsp::backend::LspBackend;
 
 #[tokio::main]
 async fn main() {

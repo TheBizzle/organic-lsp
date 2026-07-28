@@ -17,9 +17,9 @@ use tower_lsp_server::ls_types::{
   TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Uri, WorkDoneProgressOptions, WorkspaceEdit,
 };
 
+pub mod backend;
 pub mod definition;
 pub mod document;
-pub mod lsp_backend;
 pub mod semantic_tokens;
 
 use crate::analyzer::address::NamedVarAddress;
@@ -29,9 +29,9 @@ use crate::core::diagnostics::{error_as_diagnostic, warning_as_diagnostic};
 use crate::lexer::doc_loc::DocLoc;
 use crate::lexer::source_loc::SourceLoc;
 use crate::lexer::token::Token;
+use crate::lsp::backend::LspBackend;
 use crate::lsp::definition::describe_defn;
 use crate::lsp::document::{Document, Entity, LValueInfo};
-use crate::lsp::lsp_backend::LspBackend;
 use crate::lsp::semantic_tokens::{TOKEN_TYPES, calc_semantic_tokens};
 use crate::parser::analyze;
 
