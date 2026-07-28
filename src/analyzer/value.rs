@@ -11,8 +11,8 @@ pub enum Accidental {
   Sharp,
 }
 
-// Do not think of adding a `Function` constructor here.  Functions go in `FUNCTIONS`, not `CONSTANTS`.
-// --Jason B. (7/25/26)
+// Don't even think of adding a `Function` constructor here.  Functions go in `FUNCTIONS`, not `CONSTANTS`.
+// --Jason B. (7/28/26)
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConstantValue {
   AudioEffect,
