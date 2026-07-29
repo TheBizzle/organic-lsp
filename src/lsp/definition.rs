@@ -11,7 +11,7 @@ pub fn describe_defn(defn: &TermDefn) -> String {
     TermDefn::BuiltinNote { note } => {
       let hertz = calculate_note(note);
       let hertz_3_decimals = (hertz * 1000.0).round() / 1000.0;
-      format!("Built-in note: {} ({})", describe_note(note), hertz_3_decimals)
+      format!("Built-in note: {} ({} Hz)", describe_note(note), hertz_3_decimals)
     },
     TermDefn::UserDefined { token } => format!("User-defined value: {token:?}"), // TODO: Get
                                                                                  // type info
