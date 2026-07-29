@@ -4,7 +4,7 @@ use crate::analyzer::value::{Accidental, ConstantValue, Note, TermDefn};
 use ConstantValue as CV;
 
 #[must_use]
-pub fn describe_defn(defn: &TermDefn) -> String {
+pub(super) fn describe_defn(defn: &TermDefn) -> String {
   match defn {
     TermDefn::BuiltinConstant { value } => format!("Built-in constant: {}", describe_constant(value)),
     TermDefn::BuiltinFn { value } => format!("Built-in function: {}", describe_function(value)),

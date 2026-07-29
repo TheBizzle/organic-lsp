@@ -11,7 +11,7 @@ pub struct Param {
 
 /// # Errors
 /// When a parameter does not have an accompanying value
-pub fn as_args(params: Vec<Param>) -> Result<Vec<Arg>, ParserError> {
+pub(super) fn as_args(params: Vec<Param>) -> Result<Vec<Arg>, ParserError> {
   params
     .into_iter()
     .map(|param| {
@@ -26,7 +26,7 @@ pub fn as_args(params: Vec<Param>) -> Result<Vec<Arg>, ParserError> {
 
 /// # Errors
 /// When a parameter does not have an accompanying value
-pub fn as_formals(params: Vec<Param>) -> Result<Vec<Formal>, ParserError> {
+pub(super) fn as_formals(params: Vec<Param>) -> Result<Vec<Formal>, ParserError> {
   params
     .into_iter()
     .map(|param| {
@@ -42,13 +42,13 @@ pub fn as_formals(params: Vec<Param>) -> Result<Vec<Formal>, ParserError> {
 /// # Panics
 /// When given a token that isn't an identifier
 #[must_use]
-pub fn as_symbol(ident: &Token, descriptor: &str) -> Symbol {
+pub(super) fn as_symbol(ident: &Token, descriptor: &str) -> Symbol {
   match &ident.token_type {
     Identifier(name) => Symbol { name: name.clone(), token: ident.clone() },
     x => panic!("Impossible {descriptor}: {x:?}"),
   }
 }
 
-pub fn sequence<T>(head: T, tail: Vec<T>) -> Vec<T> {
+pub(super) fn sequence<T>(head: T, tail: Vec<T>) -> Vec<T> {
   std::iter::once(head).chain(tail).collect()
 }

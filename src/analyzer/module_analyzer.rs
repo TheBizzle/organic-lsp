@@ -11,7 +11,7 @@ use crate::analyzer::expr_analyzer::{crawl_expr, crawl_function_call};
 use crate::analyzer::organic_type::OrganicType as OT;
 use crate::analyzer::value::TermDefn::UserDefined;
 
-pub fn run(state: &mut AnalysisState, module: Module) {
+pub(super) fn run(state: &mut AnalysisState, module: Module) {
   module.includes.into_iter().for_each(|include| crawl_include(state, &include));
   module.statements.into_iter().for_each(|statement| crawl_statement(state, statement));
 }

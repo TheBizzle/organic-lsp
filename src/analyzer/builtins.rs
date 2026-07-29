@@ -31,7 +31,7 @@ pub struct BuiltIns {
 }
 
 #[must_use]
-pub fn initial_state() -> BuiltIns {
+pub(super) fn initial_state() -> BuiltIns {
   (*INITIAL_STATE).clone()
 }
 
