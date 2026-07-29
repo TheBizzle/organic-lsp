@@ -24,32 +24,15 @@ lalrpop_util::lalrpop_mod!(
   pub grammar, "/parser/grammar.rs"
 );
 
-use crate::analyzer;
-use crate::analyzer::analysis::Analysis;
-use crate::core::diagnostics::LspError;
 use crate::core::diagnostics::ParserError::{self, ExtraToken, FictionalToken, UnexpectedEOF, WrongToken};
-use crate::core::doc_loc::DocLoc;
-use crate::lexer::lex;
 use crate::lexer::token::{Token, TokenType};
 use crate::parser::ast::Module;
 use crate::parser::grammar::ModuleParser;
-use LspError::{LspLexerError, LspParserError};
 
-pub fn analyze(doc_loc: &DocLoc, doc_text: &str) -> (Analysis, Vec<LspError>) {
-  let (tokens, lerrors) = lex(doc_loc, doc_text);
-  let lsp_lerrors = lerrors.into_iter().map(LspLexerError).collect();
-
-  match parse(tokens) {
-    Ok(module) => (analyzer::analyze(module), lsp_lerrors),
-    Err(error) => {
-      let lsp_all_errors = vec![LspParserError(error)].into_iter().chain(lsp_lerrors).collect();
-      let dummy_module = Module { includes: Vec::new(), statements: Vec::new() };
-      (analyzer::analyze(dummy_module), lsp_all_errors)
-    },
-  }
-}
-
-fn parse(tokens: Vec<Token>) -> Result<Module, ParserError> {
+/// # Errors
+///
+/// When tokens are encountered that do not form valid Organic code.
+pub fn parse(tokens: Vec<Token>) -> Result<Module, ParserError> {
   let parser = ModuleParser::new();
   let triples: Vec<_> = tokens
     .into_iter()
