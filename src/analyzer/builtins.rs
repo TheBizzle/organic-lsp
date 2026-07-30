@@ -423,7 +423,6 @@ static CONSTANTS: &[Constant] = &[
   Constant { name: "linear", value: CV::RandomArg },
   Constant { name: "nearest", value: CV::RoundArg },
   Constant { name: "pi", value: CV::Number(consts::PI) },
-  Constant { name: "ping-pong", value: CV::SequenceArg },
   Constant { name: "shuffle", value: CV::SequenceArg },
   Constant { name: "step", value: CV::RandomArg },
   Constant { name: "tau", value: CV::Number(consts::TAU) },
