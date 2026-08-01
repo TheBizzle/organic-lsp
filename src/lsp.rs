@@ -1,3 +1,10 @@
+pub mod backend;
+pub mod common;
+pub mod definition;
+pub mod document;
+pub mod full_analysis;
+pub mod semantic_tokens;
+
 use std::collections::HashMap;
 
 use tower_lsp_server::LanguageServer;
@@ -13,14 +20,8 @@ use tower_lsp_server::ls_types::{
   TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, WorkDoneProgressOptions, WorkspaceEdit,
 };
 
-pub mod backend;
-pub mod common;
-pub mod definition;
-pub mod document;
-pub mod full_analysis;
-pub mod semantic_tokens;
-
 use crate::core::doc_loc::DocLoc;
+
 use crate::lsp::backend::LspBackend;
 use crate::lsp::common::token_to_location;
 use crate::lsp::definition::describe_defn;

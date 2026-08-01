@@ -5,18 +5,22 @@ use rangemap::RangeMap;
 
 use tower_lsp_server::ls_types::Uri;
 
-use crate::analyzer;
-use crate::analyzer::analysis::{Analysis, Diagnostics, NonVarToken};
 use crate::core::address::NamedVarAddress;
 use crate::core::diagnostics::{LspError, error_as_diagnostic, warning_as_diagnostic};
 use crate::core::doc_loc::DocLoc;
+
 use crate::lexer::lex;
 use crate::lexer::source_loc::SourceLoc;
+
+use crate::parser::ast::Module;
+use crate::parser::parse;
+
+use crate::analyzer;
+use crate::analyzer::analysis::{Analysis, Diagnostics, NonVarToken};
+
 use crate::lsp::backend::LspBackend;
 use crate::lsp::common::source_loc_to_range;
 use crate::lsp::document::{Document, Entity, LValueInfo};
-use crate::parser::ast::Module;
-use crate::parser::parse;
 
 use LspError::{LspAnalyzerError, LspLexerError, LspParserError};
 

@@ -1,5 +1,6 @@
-use crate::lexer::token::Token;
 use ordered_float::NotNan;
+
+use crate::lexer::token::Token;
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Symbol {

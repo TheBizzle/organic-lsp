@@ -1,7 +1,8 @@
 use logos::Logos;
 
-use crate::lexer::source_loc::SourceLoc;
 use ordered_float::NotNan;
+
+use crate::lexer::source_loc::SourceLoc;
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Token {

@@ -4,11 +4,12 @@ use std::sync::{Arc, LazyLock};
 
 use strum::IntoEnumIterator;
 
+use crate::core::address::{NamedVarAddress, ScopeAddress};
+
 use crate::analyzer::function::{Function, ParamInfo as PI};
 use crate::analyzer::organic_type::OrganicType;
 use crate::analyzer::value::TermDefn::{self, BuiltinConstant, BuiltinFn, BuiltinNote};
 use crate::analyzer::value::{Accidental, ConstantValue, Note, PitchClass};
-use crate::core::address::{NamedVarAddress, ScopeAddress};
 
 use ConstantValue as CV;
 use OrganicType as OT;

@@ -1,5 +1,3 @@
-use lalrpop_util::ParseError as LALR;
-
 pub mod ast;
 pub mod lalrpop;
 
@@ -24,8 +22,12 @@ lalrpop_util::lalrpop_mod!(
   pub grammar, "/parser/grammar.rs"
 );
 
+use lalrpop_util::ParseError as LALR;
+
 use crate::core::diagnostics::ParserError::{self, ExtraToken, FictionalToken, UnexpectedEOF, WrongToken};
+
 use crate::lexer::token::{Token, TokenType};
+
 use crate::parser::ast::Module;
 use crate::parser::grammar::ModuleParser;
 

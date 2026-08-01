@@ -1,11 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use crate::lexer::token::Token;
-
-use crate::parser::ast::{Arg, Expr, Formal, FuncCall, FuncLiteral, Operator, Statement, Symbol};
-use Operator::{Divide, GreaterOrEquals, GreaterThan, LessOrEquals, LessThan, Minus, Plus, Times};
-
 use crate::core::address::{NamedVarAddress, ScopeAddress};
 
 use crate::core::diagnostics::AnalyzerErrorType::{
@@ -16,6 +11,11 @@ use crate::core::diagnostics::AnalyzerErrorType::{
 use crate::core::diagnostics::AnalyzerWarningType::{
   ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody,
 };
+
+use crate::lexer::token::Token;
+
+use crate::parser::ast::{Arg, Expr, Formal, FuncCall, FuncLiteral, Operator, Statement, Symbol};
+use Operator::{Divide, GreaterOrEquals, GreaterThan, LessOrEquals, LessThan, Minus, Plus, Times};
 
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT, NonVarToken};
 use crate::analyzer::common::{push_error, push_warning, resolve_addr, resolve_type};

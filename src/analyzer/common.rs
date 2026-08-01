@@ -1,7 +1,7 @@
-use crate::lexer::token::Token;
-
 use crate::core::address::NamedVarAddress;
 use crate::core::diagnostics::{AnalyzerError, AnalyzerErrorType, AnalyzerWarning, AnalyzerWarningType};
+
+use crate::lexer::token::Token;
 
 use crate::analyzer::analysis::AnalysisState;
 use crate::analyzer::organic_type::OrganicType;

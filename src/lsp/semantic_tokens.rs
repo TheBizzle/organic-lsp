@@ -1,8 +1,7 @@
 use tower_lsp_server::ls_types::{SemanticToken, SemanticTokenType, SemanticTokens, SemanticTokensResult};
 
-use crate::analyzer::analysis::{DefnInfo, HighlightingType as HLT};
-use crate::analyzer::value::TermDefn;
 use crate::core::doc_loc::DocLoc;
+
 use crate::lexer::lex;
 use crate::lexer::source_loc::SourceLoc;
 use crate::lexer::token::Token;
@@ -11,6 +10,10 @@ use crate::lexer::token::TokenType::{
   LeftBrace, LeftBracket, LeftParen, LessThan, LessThanEquals, Minus, Multiply, Newline, Number, Plus,
   RightBrace, RightBracket, RightParen, String, UnterminatedString, Whitespace,
 };
+
+use crate::analyzer::analysis::{DefnInfo, HighlightingType as HLT};
+use crate::analyzer::value::TermDefn;
+
 use crate::lsp::document::{Document, Entity};
 
 const LANGUAGE_CONSTANT: SemanticTokenType = SemanticTokenType::new("language_constant");
