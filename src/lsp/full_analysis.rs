@@ -15,8 +15,8 @@ use crate::lexer::source_loc::SourceLoc;
 use crate::parser::ast::Module;
 use crate::parser::parse;
 
-use crate::analyzer;
 use crate::analyzer::analysis::{Analysis, Diagnostics, NonVarToken};
+use crate::analyzer::analyze;
 
 use crate::lsp::backend::LspBackend;
 use crate::lsp::common::source_loc_to_range;
@@ -41,11 +41,11 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     let lsp_lerrors: Vec<_> = lerrors.into_iter().map(LspLexerError).collect();
 
     match parse(tokens) {
-      Ok(module) => (analyzer::analyze(module), lsp_lerrors),
+      Ok(module) => (analyze(module), lsp_lerrors),
       Err(error) => {
         let lsp_all_errors = vec![LspParserError(error)].into_iter().chain(lsp_lerrors).collect();
         let dummy_module = Module { includes: Vec::new(), statements: Vec::new() };
-        (analyzer::analyze(dummy_module), lsp_all_errors)
+        (analyze(dummy_module), lsp_all_errors)
       },
     }
   };
