@@ -1,5 +1,6 @@
 use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 
+// TODO: This package structure sucks
 use crate::analyzer::organic_type::OrganicType;
 use crate::lexer::source_loc::{MiniLoc, SourceLoc};
 use crate::lexer::token::Token;
