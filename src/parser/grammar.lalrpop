@@ -48,8 +48,8 @@ pub Statement: Statement = {
     Ok(Statement::VariableDecl(
       VarDecl { name: symbol.clone()
               , init: Expr::Function {
-                        value: FuncLiteral { name: symbol, formals: as_formals(params)?, body },
-                        token: ident
+                        value: FuncLiteral { name: symbol, formals: as_formals(params)?, body }
+                      , token: ident
                       }
               }
     ))
