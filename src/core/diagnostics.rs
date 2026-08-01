@@ -1,7 +1,6 @@
 use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 
 use crate::analyzer::organic_type::OrganicType;
-use crate::core::doc_loc::DocLoc;
 use crate::lexer::source_loc::{MiniLoc, SourceLoc};
 use crate::lexer::token::Token;
 
@@ -171,12 +170,15 @@ pub fn warning_as_diagnostic(warning: AnalyzerWarning) -> Diagnostic {
   Diagnostic { range, severity: Some(DiagnosticSeverity::WARNING), message, ..Default::default() }
 }
 
-fn as_range_mini(mini: MiniLoc) -> Range {
-  as_range(&SourceLoc { line: mini.line, column: mini.column, length: 1, pos: 0, doc_loc: DocLoc::new("") })
+const fn as_range_mini(mini: MiniLoc) -> Range {
+  as_range3(mini.line, mini.column, 1)
 }
 
 const fn as_range(source_loc: &SourceLoc) -> Range {
-  let &SourceLoc { line, column, length, .. } = source_loc;
+  as_range3(source_loc.line, source_loc.column, source_loc.length)
+}
+
+const fn as_range3(line: u32, column: u32, length: u32) -> Range {
   Range {
     start: Position { line: line - 1, character: column - 1 },
     end: Position { line: line - 1, character: column - 1 + length },
