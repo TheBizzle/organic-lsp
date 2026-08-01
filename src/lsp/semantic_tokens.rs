@@ -109,9 +109,6 @@ fn calc_highlighting_for_ident(source_loc: &SourceLoc, document: &Document) -> S
     && let Some(entity) = line_ranges.get(&(column - 1))
   {
     match entity {
-      Entity::NamedArg => SemanticTokenType::PROPERTY,
-      Entity::NumberLiteral => SemanticTokenType::NUMBER,
-      Entity::StringLiteral => SemanticTokenType::STRING,
       Entity::LValue { addr } => document.infos.get(addr).map_or(SemanticTokenType::VARIABLE, |info_arc| {
         #[allow(clippy::match_same_arms)]
         match info_arc.as_ref().definition {
@@ -126,6 +123,8 @@ fn calc_highlighting_for_ident(source_loc: &SourceLoc, document: &Document) -> S
           },
         }
       }),
+      Entity::NamedArg => SemanticTokenType::PROPERTY,
+      Entity::NumberLiteral | Entity::StringLiteral => panic!("These tokens are not legal here."),
     }
   } else {
     SemanticTokenType::VARIABLE
