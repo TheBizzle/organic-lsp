@@ -61,7 +61,7 @@ pub struct Analysis {
 
 impl Analysis {
   #[must_use]
-  pub fn new(definitions: HashMap<NamedVarAddress, TermDefn>) -> Self {
+  pub(super) fn new(definitions: HashMap<NamedVarAddress, TermDefn>) -> Self {
     let usages: HashMap<_, _> = definitions.keys().map(|addr| (addr.clone(), HashSet::new())).collect();
     Self {
       definitions,
@@ -74,7 +74,7 @@ impl Analysis {
 }
 
 #[derive(Debug)]
-pub struct AnalysisState {
+pub(super) struct AnalysisState {
   pub analysis: Analysis,
   pub initting_var_opt: Option<String>,
   pub last_scope_addr: ScopeAddress,

@@ -3,12 +3,12 @@ use std::collections::HashMap;
 use crate::core::address::{NamedVarAddress, ScopeAddress};
 
 #[derive(Debug, Eq, PartialEq)]
-pub struct Env {
+pub(super) struct Env {
   pub bindings: HashMap<String, NamedVarAddress>,
 }
 
 #[derive(Debug, Eq, PartialEq)]
-pub struct Scope {
+pub(super) struct Scope {
   pub env: Env,
   pub address: ScopeAddress,
 }

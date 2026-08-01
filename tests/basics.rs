@@ -5,13 +5,13 @@ mod tests {
 
   use tokio::fs::read_to_string;
 
+  use tower_lsp_server::LanguageServer;
   use tower_lsp_server::ls_types::{
     Diagnostic, DiagnosticSeverity, DidOpenTextDocumentParams, Position, Range, TextDocumentItem,
   };
-  use tower_lsp_server::{LanguageServer, LspService};
 
   use organic_lsp::core::doc_loc::DocLoc;
-  use organic_lsp::lsp::backend::LspBackend;
+  use organic_lsp::lsp::new_lsp;
 
   #[tokio::test]
   async fn can_open_cascade() {
@@ -126,7 +126,10 @@ mod tests {
     let mini_uri = format!("file://{}", path.display());
     let uri = mini_uri.clone().parse().unwrap();
 
-    let backend_service = new_backend_service();
+    let backend_service = {
+      let (service, _socket) = new_lsp();
+      service
+    };
     let backend = backend_service.inner();
 
     backend
@@ -136,10 +139,5 @@ mod tests {
       .await;
 
     backend.documents.read().await.get(&DocLoc::new(mini_uri)).unwrap().diagnostics.clone()
-  }
-
-  fn new_backend_service() -> LspService<LspBackend> {
-    let (service, _socket) = LspService::new(LspBackend::new);
-    service
   }
 }

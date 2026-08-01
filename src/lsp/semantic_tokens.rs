@@ -18,7 +18,7 @@ use crate::lsp::document::{Document, Entity};
 
 const LANGUAGE_CONSTANT: SemanticTokenType = SemanticTokenType::new("language_constant");
 
-pub const TOKEN_TYPES: &[SemanticTokenType] = &[
+pub(super) const TOKEN_TYPES: &[SemanticTokenType] = &[
   SemanticTokenType::FUNCTION,
   LANGUAGE_CONSTANT,
   SemanticTokenType::NUMBER,
@@ -44,7 +44,9 @@ enum Modifier {
   _Mod3,
 }
 
-pub async fn calc_semantic_tokens(doc_loc: &DocLoc, document: &Document) -> Option<SemanticTokensResult> {
+pub(super) async fn calc_semantic_tokens(
+  doc_loc: &DocLoc, document: &Document,
+) -> Option<SemanticTokensResult> {
   let (tokens, _) = lex(doc_loc, &document.contents);
 
   let mut last_loc = SourceLoc { doc_loc: doc_loc.clone(), pos: 0, line: 1, column: 1, length: 0 };

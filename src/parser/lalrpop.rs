@@ -6,7 +6,7 @@ use crate::lexer::token::TokenType::Identifier;
 use crate::parser::ast::{Arg, Expr, Formal, Symbol};
 
 #[derive(Debug)]
-pub struct Param {
+pub(super) struct Param {
   pub symbol: Symbol,
   pub value_option: Option<Expr>,
 }

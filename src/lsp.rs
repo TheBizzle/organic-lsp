@@ -1,13 +1,12 @@
-pub mod backend;
-pub mod common;
-pub mod definition;
-pub mod document;
-pub mod full_analysis;
-pub mod semantic_tokens;
+mod backend;
+mod common;
+mod definition;
+mod document;
+mod full_analysis;
+mod semantic_tokens;
 
 use std::collections::HashMap;
 
-use tower_lsp_server::LanguageServer;
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::{
   CodeActionParams, CodeActionProviderCapability, CodeActionResponse, CompletionOptions, CompletionParams,
@@ -19,6 +18,7 @@ use tower_lsp_server::ls_types::{
   SemanticTokensServerCapabilities, ServerCapabilities, TextDocumentPositionParams,
   TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, WorkDoneProgressOptions, WorkspaceEdit,
 };
+use tower_lsp_server::{ClientSocket, LanguageServer, LspService};
 
 use crate::core::doc_loc::DocLoc;
 
@@ -32,6 +32,10 @@ use crate::lsp::semantic_tokens::{TOKEN_TYPES, calc_semantic_tokens};
 use Entity::LValue;
 
 const DEBUG: MessageType = MessageType::ERROR;
+
+pub fn new_lsp() -> (LspService<LspBackend>, ClientSocket) {
+  LspService::new(LspBackend::new)
+}
 
 impl LanguageServer for LspBackend {
   async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {

@@ -2,9 +2,9 @@ use std::net::SocketAddr;
 
 use tokio::net::TcpListener;
 
-use tower_lsp_server::{LspService, Server};
+use tower_lsp_server::Server;
 
-use organic_lsp::lsp::backend::LspBackend;
+use organic_lsp::lsp::new_lsp;
 
 #[tokio::main]
 async fn main() {
@@ -14,7 +14,7 @@ async fn main() {
   loop {
     let (stream, _) = listener.accept().await.unwrap();
     let (read, write) = tokio::io::split(stream);
-    let (service, socket) = LspService::new(LspBackend::new);
+    let (service, socket) = new_lsp();
     Server::new(read, write, socket).serve(service).await;
   }
 }

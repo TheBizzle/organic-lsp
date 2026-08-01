@@ -14,18 +14,18 @@ use crate::analyzer::value::{Accidental, ConstantValue, Note, PitchClass};
 use ConstantValue as CV;
 use OrganicType as OT;
 
-pub struct Constant {
+pub(super) struct Constant {
   name: &'static str,
   value: ConstantValue,
 }
 
-pub struct StdLibFn {
+pub(super) struct StdLibFn {
   name: &'static str,
   func: Function,
 }
 
 #[derive(Clone)]
-pub struct BuiltIns {
+pub(super) struct BuiltIns {
   pub bindings: HashMap<String, NamedVarAddress>,
   pub defs: HashMap<NamedVarAddress, TermDefn>,
   pub vars: HashMap<NamedVarAddress, OrganicType>,
@@ -91,7 +91,7 @@ fn value_to_type(value: ConstantValue) -> OrganicType {
   }
 }
 
-pub static INITIAL_SCOPE_ADDRESS: &ScopeAddress = &ScopeAddress { n: 0 };
+pub(super) static INITIAL_SCOPE_ADDRESS: &ScopeAddress = &ScopeAddress { n: 0 };
 
 static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
   [
