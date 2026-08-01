@@ -9,7 +9,7 @@ use crate::lexer::token::Token;
 use crate::lexer::token::TokenType::{
   BlockComment, Colon, Comma, Comment, Divide, Equals, GreaterThan, GreaterThanEquals, Identifier, Include,
   LeftBrace, LeftBracket, LeftParen, LessThan, LessThanEquals, Minus, Multiply, Newline, Number, Plus,
-  RightBrace, RightBracket, RightParen, String, Whitespace,
+  RightBrace, RightBracket, RightParen, String, UnterminatedString, Whitespace,
 };
 use crate::lsp::document::{Document, Entity};
 
@@ -87,6 +87,7 @@ fn convert_token(token: &Token, last_loc: &SourceLoc, document: &Document) -> Op
     RightBracket => None,
     RightParen => None,
     String(_) => Some(SemanticTokenType::STRING),
+    UnterminatedString(_) => Some(SemanticTokenType::STRING),
     Whitespace => panic!("Lexer leaking whitespace should not be possible"),
   };
 

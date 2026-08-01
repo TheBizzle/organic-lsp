@@ -38,13 +38,13 @@ pub fn lex(doc_loc: &DocLoc, doc_text: &str) -> (Vec<Token>, Vec<LexerError>) {
               last_line_offset = end;
             },
             ttype => {
-              if ttype == TokenType::BlockComment {
-                let comment = &doc_text[span.clone()];
-                let num_newlines = as_u32_risky(comment.matches('\n').count());
+              if ttype == TokenType::BlockComment || matches!(ttype, TokenType::UnterminatedString(_)) {
+                let multiline = &doc_text[span.clone()];
+                let num_newlines = as_u32_risky(multiline.matches('\n').count());
 
                 if num_newlines > 0 {
                   let start_offset = as_u32_risky(span.start);
-                  let last_newline_offset = as_u32_risky(comment.rmatch_indices('\n').next().unwrap().0);
+                  let last_newline_offset = as_u32_risky(multiline.rmatch_indices('\n').next().unwrap().0);
                   line_num += num_newlines;
                   last_line_offset = start_offset + last_newline_offset + 1;
                 }

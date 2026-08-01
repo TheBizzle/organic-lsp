@@ -74,6 +74,12 @@ pub enum TokenType {
   })]
   String(String),
 
+  #[regex(r#""([^"\\]|\\.)*$"#, |lex| {
+    let s = lex.slice();
+    s[1..s.len() - 1].to_string()
+  })]
+  UnterminatedString(String),
+
   #[regex(r"[ \t\f]+", logos::skip)] // Ignore most whitespace
   Whitespace,
 }
