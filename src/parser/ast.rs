@@ -33,6 +33,7 @@ pub enum Operator {
   Minus,
   Times,
   Divide,
+  Equals,
   LessThan,
   LessOrEquals,
   GreaterThan,

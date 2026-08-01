@@ -12,6 +12,9 @@ pub struct Token {
 
 #[derive(Clone, Debug, Eq, Hash, Logos, Ord, PartialEq, PartialOrd)]
 pub enum TokenType {
+  #[token("=")]
+  Assign,
+
   #[regex(r"(?s)/\*.*?\*/")]
   BlockComment,
 
@@ -25,7 +28,7 @@ pub enum TokenType {
   #[token("/")]
   Divide,
 
-  #[token("=")]
+  #[token("==")]
   Equals,
 
   #[token(">")]

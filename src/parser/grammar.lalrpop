@@ -18,10 +18,11 @@ extern {
     "include"    => Token { token_type: TokenType::Include           , .. },
     "number"     => Token { token_type: TokenType::Number(f64)       , .. },
     "string"     => Token { token_type: TokenType::String(String)    , .. },
+    "="          => Token { token_type: TokenType::Assign            , .. },
     ":"          => Token { token_type: TokenType::Colon             , .. },
     ","          => Token { token_type: TokenType::Comma             , .. },
     "/"          => Token { token_type: TokenType::Divide            , .. },
-    "="          => Token { token_type: TokenType::Equals            , .. },
+    "=="         => Token { token_type: TokenType::Equals            , .. },
     ">"          => Token { token_type: TokenType::GreaterThan       , .. },
     ">="         => Token { token_type: TokenType::GreaterThanEquals , .. },
     "{"          => Token { token_type: TokenType::LeftBrace         , .. },
@@ -67,7 +68,12 @@ Include: Include = {
 };
 
 Expr: Expr = {
-  Comparison
+  Equality
+};
+
+Equality: Expr = {
+  <lhs: Comparison> <token: "=="> <rhs: Equality> => Expr::Op { left: Box::new(lhs), operator: Op::Equals, right: Box::new(rhs), token },
+  Comparison,
 };
 
 Comparison: Expr = {

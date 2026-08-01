@@ -6,9 +6,9 @@ use crate::lexer::lex;
 use crate::lexer::source_loc::SourceLoc;
 use crate::lexer::token::Token;
 use crate::lexer::token::TokenType::{
-  BlockComment, Colon, Comma, Comment, Divide, Equals, GreaterThan, GreaterThanEquals, Identifier, Include,
-  LeftBrace, LeftBracket, LeftParen, LessThan, LessThanEquals, Minus, Multiply, Newline, Number, Plus,
-  RightBrace, RightBracket, RightParen, String, UnterminatedString, Whitespace,
+  Assign, BlockComment, Colon, Comma, Comment, Divide, Equals, GreaterThan, GreaterThanEquals, Identifier,
+  Include, LeftBrace, LeftBracket, LeftParen, LessThan, LessThanEquals, Minus, Multiply, Newline, Number,
+  Plus, RightBrace, RightBracket, RightParen, String, UnterminatedString, Whitespace,
 };
 
 use crate::analyzer::analysis::{DefnInfo, HighlightingType as HLT};
@@ -68,12 +68,13 @@ fn convert_token(token: &Token, last_loc: &SourceLoc, document: &Document) -> Op
 
   #[allow(clippy::match_same_arms)]
   let opt = match token_type {
+    Assign => None,
     BlockComment => Some(SemanticTokenType::COMMENT),
     Colon => None,
     Comma => None,
     Comment => Some(SemanticTokenType::COMMENT),
     Divide => Some(SemanticTokenType::OPERATOR),
-    Equals => None,
+    Equals => Some(SemanticTokenType::OPERATOR),
     GreaterThan => Some(SemanticTokenType::OPERATOR),
     GreaterThanEquals => Some(SemanticTokenType::OPERATOR),
     Identifier(_) => Some(calc_highlighting_for_ident(source_loc, document)),

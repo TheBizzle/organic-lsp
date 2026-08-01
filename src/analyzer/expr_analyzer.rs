@@ -15,7 +15,7 @@ use crate::core::diagnostics::AnalyzerWarningType::{
 use crate::lexer::token::Token;
 
 use crate::parser::ast::{Arg, Expr, Formal, FuncCall, FuncLiteral, Operator, Statement, Symbol};
-use Operator::{Divide, GreaterOrEquals, GreaterThan, LessOrEquals, LessThan, Minus, Plus, Times};
+use Operator::{Divide, Equals, GreaterOrEquals, GreaterThan, LessOrEquals, LessThan, Minus, Plus, Times};
 
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT, NonVarToken};
 use crate::analyzer::common::{push_error, push_warning, resolve_addr, resolve_type};
@@ -263,23 +263,29 @@ fn crawl_negated(state: &mut AnalysisState, expr: Expr, token: Token) -> Option<
   }
 }
 
+#[rustfmt::skip]
 fn crawl_op(state: &mut AnalysisState, left: Expr, op: &Operator, right: Expr) -> OT {
   let left_token = left.get_token();
-  if let Some(got) = crawl_expr(state, left)
-    && got != OT::Number
-  {
-    push_error(state, left_token, TypeMismatch { expected: OT::Number, got });
-  }
-
   let right_token = right.get_token();
-  if let Some(got) = crawl_expr(state, right)
-    && got != OT::Number
-  {
-    push_error(state, right_token, TypeMismatch { expected: OT::Number, got });
+
+  let ltype_opt = crawl_expr(state, left);
+  let rtype_opt = crawl_expr(state, right);
+
+  if op == &Equals {
+    if let Some(expected) = ltype_opt && let Some(got) = rtype_opt && expected != got {
+      push_error(state, right_token, TypeMismatch { expected, got });
+    }
+  } else {
+    if let Some(got) = ltype_opt && got != OT::Number {
+      push_error(state, left_token, TypeMismatch { expected: OT::Number, got });
+    }
+    if let Some(got) = rtype_opt && got != OT::Number {
+      push_error(state, right_token, TypeMismatch { expected: OT::Number, got });
+    }
   }
 
   match op {
     Plus | Minus | Times | Divide => OT::Number,
-    LessThan | LessOrEquals | GreaterThan | GreaterOrEquals => OT::Boolean,
+    Equals | GreaterThan | GreaterOrEquals | LessThan | LessOrEquals => OT::Boolean,
   }
 }
