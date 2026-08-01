@@ -30,13 +30,32 @@ pub struct Diagnostics {
 }
 
 #[derive(Debug)]
+pub enum NonVarToken {
+  NamedArg(Token),
+  Number(Token),
+  String(Token),
+}
+
+impl NonVarToken {
+  #[must_use]
+  pub const fn line(&self) -> u32 {
+    self.token().source_loc.line
+  }
+
+  #[must_use]
+  pub const fn token(&self) -> &Token {
+    match self {
+      Self::NamedArg(token) | Self::Number(token) | Self::String(token) => token,
+    }
+  }
+}
+
+#[derive(Debug)]
 pub struct Analysis {
   pub definitions: HashMap<NamedVarAddress, TermDefn>,
   pub defn_infos: HashMap<NamedVarAddress, DefnInfo>,
   pub diagnostics: Diagnostics,
-  pub named_arg_tokens: Vec<Token>,
-  pub number_tokens: Vec<Token>,
-  pub string_tokens: Vec<Token>,
+  pub non_var_tokens: Vec<NonVarToken>,
   pub usages: HashMap<NamedVarAddress, HashSet<Token>>,
 }
 
@@ -48,9 +67,7 @@ impl Analysis {
       definitions,
       defn_infos: HashMap::new(),
       diagnostics: Diagnostics { errors: Vec::new(), warnings: Vec::new() },
-      named_arg_tokens: Vec::new(),
-      number_tokens: Vec::new(),
-      string_tokens: Vec::new(),
+      non_var_tokens: Vec::new(),
       usages,
     }
   }

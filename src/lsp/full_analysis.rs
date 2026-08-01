@@ -6,14 +6,12 @@ use rangemap::RangeMap;
 use tower_lsp_server::ls_types::Uri;
 
 use crate::analyzer;
-use crate::analyzer::analysis::Analysis;
-use crate::analyzer::analysis::Diagnostics;
+use crate::analyzer::analysis::{Analysis, Diagnostics, NonVarToken};
 use crate::core::address::NamedVarAddress;
 use crate::core::diagnostics::{LspError, error_as_diagnostic, warning_as_diagnostic};
 use crate::core::doc_loc::DocLoc;
 use crate::lexer::lex;
 use crate::lexer::source_loc::SourceLoc;
-use crate::lexer::token::Token;
 use crate::lsp::backend::LspBackend;
 use crate::lsp::common::source_loc_to_range;
 use crate::lsp::document::{Document, Entity, LValueInfo};
@@ -30,9 +28,7 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
       definitions,
       mut defn_infos,
       diagnostics: Diagnostics { errors, warnings },
-      named_arg_tokens,
-      number_tokens,
-      string_tokens,
+      non_var_tokens,
       usages,
     },
     pre_errors,
@@ -73,9 +69,7 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
   let (mut entities, infos) = definits
     .iter()
     .map(|(source_loc, _, _)| source_loc.line)
-    .chain(named_arg_tokens.iter().map(|token| token.source_loc.line))
-    .chain(number_tokens.iter().map(|token| token.source_loc.line))
-    .chain(string_tokens.iter().map(|token| token.source_loc.line))
+    .chain(non_var_tokens.iter().map(NonVarToken::line))
     .max()
     .map_or_else(
       || (Vec::<RangeMap<u32, Entity>>::new(), HashMap::<NamedVarAddress, Arc<LValueInfo>>::new()),
@@ -90,16 +84,14 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
       },
     );
 
-  for Token { source_loc, .. } in named_arg_tokens {
-    insert_entity(&mut entities, &source_loc, Entity::NamedArg);
-  }
+  for ref nvt in non_var_tokens {
+    let entity_type = match nvt {
+      NonVarToken::NamedArg(_) => Entity::NamedArg,
+      NonVarToken::Number(_) => Entity::NumberLiteral,
+      NonVarToken::String(_) => Entity::StringLiteral,
+    };
 
-  for Token { source_loc, .. } in number_tokens {
-    insert_entity(&mut entities, &source_loc, Entity::NumberLiteral);
-  }
-
-  for Token { source_loc, .. } in string_tokens {
-    insert_entity(&mut entities, &source_loc, Entity::StringLiteral);
+    insert_entity(&mut entities, &nvt.token().source_loc, entity_type);
   }
 
   let doc = Document { contents: text.clone(), diagnostics, entities, infos };

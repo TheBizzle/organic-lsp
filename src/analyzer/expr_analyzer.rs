@@ -17,7 +17,7 @@ use crate::core::diagnostics::AnalyzerWarningType::{
   ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody,
 };
 
-use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT};
+use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT, NonVarToken};
 use crate::analyzer::common::{push_error, push_warning, resolve_addr, resolve_type};
 use crate::analyzer::function::{Function, ParamInfo};
 use crate::analyzer::module_analyzer::crawl_statement;
@@ -34,12 +34,12 @@ pub(super) fn crawl_expr(state: &mut AnalysisState, expr: Expr) -> Option<OT> {
     Expr::LValue { name, token } => crawl_lvalue(state, &name, token),
     Expr::Negated { value, token } => crawl_negated(state, *value, token),
     Expr::Number { token, .. } => {
-      state.analysis.number_tokens.push(token);
+      state.analysis.non_var_tokens.push(NonVarToken::Number(token));
       Some(OT::Number)
     },
     Expr::Op { left, operator, right, .. } => Some(crawl_op(state, *left, &operator, *right)),
     Expr::String { token, .. } => {
-      state.analysis.string_tokens.push(token);
+      state.analysis.non_var_tokens.push(NonVarToken::String(token));
       Some(OT::String)
     },
   }
@@ -78,7 +78,8 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: FuncCall) 
       match resolve_type(state, &addr) {
         OT::Function(func) => {
           state.analysis.usages.entry(addr).or_default().insert(token.clone());
-          state.analysis.named_arg_tokens.extend(actual_tokens.values().cloned());
+          let named_nvts: Vec<_> = actual_tokens.values().cloned().map(NonVarToken::NamedArg).collect();
+          state.analysis.non_var_tokens.extend(named_nvts);
 
           let mut expecteds: HashMap<_, _> = func
             .params
