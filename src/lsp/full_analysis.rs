@@ -7,6 +7,7 @@ use tower_lsp_server::ls_types::Uri;
 
 use crate::analyzer;
 use crate::analyzer::analysis::Analysis;
+use crate::analyzer::analysis::Diagnostics;
 use crate::core::address::NamedVarAddress;
 use crate::core::diagnostics::{LspError, error_as_diagnostic, warning_as_diagnostic};
 use crate::core::doc_loc::DocLoc;
@@ -28,12 +29,11 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     Analysis {
       definitions,
       mut defn_infos,
-      errors,
+      diagnostics: Diagnostics { errors, warnings },
       named_arg_tokens,
       number_tokens,
       string_tokens,
       usages,
-      warnings,
     },
     pre_errors,
   ) = {

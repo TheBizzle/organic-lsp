@@ -23,9 +23,9 @@ pub(super) fn resolve_type(state: &AnalysisState, addr: &NamedVarAddress) -> Org
 }
 
 pub(super) fn push_warning(state: &mut AnalysisState, token: Token, typ: AnalyzerWarningType) {
-  state.analysis.warnings.push(AnalyzerWarning { typ, offender: token });
+  state.analysis.diagnostics.warnings.push(AnalyzerWarning { typ, offender: token });
 }
 
 pub(super) fn push_error(state: &mut AnalysisState, token: Token, typ: AnalyzerErrorType) {
-  state.analysis.errors.push(AnalyzerError { typ, offender: token });
+  state.analysis.diagnostics.errors.push(AnalyzerError { typ, offender: token });
 }

@@ -24,15 +24,20 @@ pub struct DefnInfo {
 }
 
 #[derive(Debug)]
+pub struct Diagnostics {
+  pub errors: Vec<AnalyzerError>,
+  pub warnings: Vec<AnalyzerWarning>,
+}
+
+#[derive(Debug)]
 pub struct Analysis {
   pub definitions: HashMap<NamedVarAddress, TermDefn>,
   pub defn_infos: HashMap<NamedVarAddress, DefnInfo>,
-  pub errors: Vec<AnalyzerError>,
+  pub diagnostics: Diagnostics,
   pub named_arg_tokens: Vec<Token>,
   pub number_tokens: Vec<Token>,
   pub string_tokens: Vec<Token>,
   pub usages: HashMap<NamedVarAddress, HashSet<Token>>,
-  pub warnings: Vec<AnalyzerWarning>,
 }
 
 impl Analysis {
@@ -42,12 +47,11 @@ impl Analysis {
     Self {
       definitions,
       defn_infos: HashMap::new(),
-      errors: Vec::new(),
+      diagnostics: Diagnostics { errors: Vec::new(), warnings: Vec::new() },
       named_arg_tokens: Vec::new(),
       number_tokens: Vec::new(),
       string_tokens: Vec::new(),
       usages,
-      warnings: Vec::new(),
     }
   }
 }
