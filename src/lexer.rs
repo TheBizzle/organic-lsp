@@ -37,8 +37,8 @@ pub fn lex(doc_loc: &DocLoc, doc_text: &str) -> (Vec<Token>, Vec<LexerError>) {
               line_num += 1;
               last_line_offset = end;
             },
-            _ => {
-              if token_type.clone() == TokenType::BlockComment {
+            ttype => {
+              if ttype == TokenType::BlockComment {
                 let comment = &doc_text[span.clone()];
                 let num_newlines = as_u32_risky(comment.matches('\n').count());
 
@@ -50,7 +50,7 @@ pub fn lex(doc_loc: &DocLoc, doc_text: &str) -> (Vec<Token>, Vec<LexerError>) {
                 }
               }
 
-              token_sequence.push(Token { token_type, source_loc });
+              token_sequence.push(Token { token_type: ttype, source_loc });
             },
           }
         } else {
