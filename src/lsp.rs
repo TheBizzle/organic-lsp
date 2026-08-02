@@ -20,7 +20,7 @@ use tower_lsp_server::ls_types::{
   Position, Range as TowerRange, ReferenceParams, RenameParams, SemanticTokensFullOptions,
   SemanticTokensLegend, SemanticTokensOptions, SemanticTokensParams, SemanticTokensResult,
   SemanticTokensServerCapabilities, ServerCapabilities, TextDocumentPositionParams,
-  TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, WorkDoneProgressOptions, WorkspaceEdit,
+  TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Uri, WorkDoneProgressOptions, WorkspaceEdit,
 };
 use tower_lsp_server::{ClientSocket, LanguageServer, LspService};
 
@@ -177,22 +177,27 @@ impl LanguageServer for LspBackend {
   }
 
   async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
-    let pos = params.text_document_position;
-    Ok(Some(WorkspaceEdit {
-      changes: Some(HashMap::from([(
-        pos.text_document.uri,
-        vec![TextEdit {
-          range: TowerRange {
-            // TODO
-            start: Position::new(0, 0),
-            end: Position::new(0, 0),
-          },
-          new_text: params.new_name,
-        }],
-      )])),
-      document_changes: None,
-      change_annotations: None,
-    }))
+    let TextDocumentPositionParams { text_document, position } = params.text_document_position;
+    let doc_loc = DocLoc::new(text_document.uri.to_string());
+
+    if let Some(doc) = self.documents.write().await.get(&doc_loc)
+      && let Some(line) = doc.entities.get(position.line as usize)
+      && let Some(LValue { addr }) = line.get(&position.character)
+      && let Some(info_arc) = doc.infos.get(addr)
+    {
+      let mut text_edits: HashMap<Uri, Vec<TextEdit>> = HashMap::new();
+      for x in &info_arc.as_ref().usages {
+        let Location { range, uri } = token_to_location(x);
+        text_edits.entry(uri).or_default().push(TextEdit { range, new_text: params.new_name.clone() });
+      }
+
+      let changes = Some(text_edits);
+      let ws_edit = WorkspaceEdit { changes, document_changes: None, change_annotations: None };
+
+      Ok(Some(ws_edit))
+    } else {
+      Ok(None)
+    }
   }
 
   async fn semantic_tokens_full(&self, params: SemanticTokensParams) -> Result<Option<SemanticTokensResult>> {
