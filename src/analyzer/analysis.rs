@@ -4,11 +4,11 @@ use std::sync::Arc;
 use ordered_float::NotNan;
 
 use crate::core::address::{NamedVarAddress, ScopeAddress};
-use crate::core::diagnostics::{AnalyzerError, AnalyzerWarning};
 
 use crate::lexer::token::Token;
 
 use crate::analyzer::builtins::{BuiltIns, INITIAL_SCOPE_ADDRESS, initial_state};
+use crate::analyzer::diagnostics::{AnalyzerError, AnalyzerWarning};
 use crate::analyzer::function::Function;
 use crate::analyzer::organic_type::OrganicType;
 use crate::analyzer::scope::{Env, Scope};

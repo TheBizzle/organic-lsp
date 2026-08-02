@@ -1,73 +1,31 @@
 use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 
-// TODO: This package structure sucks
+use crate::lexer::diagnostics::LexerError::{self, FileTooBig, UnknownToken};
 use crate::lexer::source_loc::{MiniLoc, SourceLoc};
-use crate::lexer::token::Token;
 
-use crate::analyzer::organic_type::OrganicType;
+use crate::parser::diagnostics::ParserError::{
+  self, ExtraToken, FictionalToken, MissingParameterValue, UnexpectedEOF, WrongToken,
+};
+
+use crate::analyzer::diagnostics::{AnalyzerError, AnalyzerWarning};
+
+use crate::analyzer::diagnostics::AnalyzerErrorType::{
+  BadInternalState, DuplicateParameter, DuplicateVar, ExtraArgument, MissingArgument, NoSuchFn,
+  NoSuchVariable, TypeMismatch, VarCannotInitInTermsOfSelf,
+};
+
+use crate::analyzer::diagnostics::AnalyzerWarningType::{
+  ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody,
+};
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum LspError {
   LspLexerError(LexerError),
   LspParserError(ParserError),
   LspAnalyzerError(AnalyzerError),
 }
-
-#[derive(Debug)]
-pub enum LexerError {
-  FileTooBig { size: usize, line_num: u32 },
-  UnknownToken { culprit: String, source_loc: SourceLoc },
-}
-
-#[derive(Debug)]
-pub enum ParserError {
-  ExtraToken { token: Token },
-  FictionalToken { location: MiniLoc },
-  MissingParameterValue { token: Token },
-  UnexpectedEOF { location: MiniLoc, expected: Vec<String> },
-  WrongToken { token: Token, expected: Vec<String> },
-}
-
-#[derive(Debug)]
-pub struct AnalyzerError {
-  pub typ: AnalyzerErrorType,
-  pub offender: Token,
-}
-
-#[derive(Debug)]
-pub struct AnalyzerWarning {
-  pub typ: AnalyzerWarningType,
-  pub offender: Token,
-}
-
-#[derive(Debug)]
-pub enum AnalyzerWarningType {
-  ArgOverridesPrevious,
-  IntermediateCallInFnDef,
-  UselessFnBody,
-}
-
-#[derive(Debug)]
-pub enum AnalyzerErrorType {
-  BadInternalState,
-  DuplicateParameter,
-  DuplicateVar,
-  ExtraArgument { name: String },
-  MissingArgument { name: String, typ: OrganicType },
-  NoSuchFn,
-  NoSuchVariable,
-  TypeMismatch { expected: OrganicType, got: OrganicType },
-  VarCannotInitInTermsOfSelf,
-}
-
-use AnalyzerErrorType::{
-  BadInternalState, DuplicateParameter, DuplicateVar, ExtraArgument, MissingArgument, NoSuchFn,
-  NoSuchVariable, TypeMismatch, VarCannotInitInTermsOfSelf,
-};
-use AnalyzerWarningType::{ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody};
-use LexerError::{FileTooBig, UnknownToken};
 use LspError::{LspAnalyzerError, LspLexerError, LspParserError};
-use ParserError::{ExtraToken, FictionalToken, MissingParameterValue, UnexpectedEOF, WrongToken};
 
 #[must_use]
 pub fn error_as_diagnostic(error: LspError) -> Diagnostic {

@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use crate::core::address::{NamedVarAddress, ScopeAddress};
 
-use crate::core::diagnostics::AnalyzerErrorType::{
+use crate::analyzer::diagnostics::AnalyzerErrorType::{
   DuplicateParameter, ExtraArgument, MissingArgument, NoSuchFn, NoSuchVariable, TypeMismatch,
   VarCannotInitInTermsOfSelf,
 };
 
-use crate::core::diagnostics::AnalyzerWarningType::{
+use crate::analyzer::diagnostics::AnalyzerWarningType::{
   ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody,
 };
 

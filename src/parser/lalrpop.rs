@@ -1,9 +1,8 @@
-use crate::core::diagnostics::ParserError;
-
 use crate::lexer::token::Token;
 use crate::lexer::token::TokenType::Identifier;
 
 use crate::parser::ast::{Arg, Expr, Formal, Symbol};
+use crate::parser::diagnostics::ParserError;
 
 #[derive(Debug)]
 pub(super) struct Param {

@@ -1,4 +1,5 @@
 pub mod analysis;
+pub mod diagnostics;
 pub mod function;
 pub mod organic_type;
 pub mod value;

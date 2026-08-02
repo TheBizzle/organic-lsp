@@ -2,6 +2,7 @@ mod backend;
 mod builtins;
 mod common;
 mod definition;
+mod diagnostics;
 mod document;
 mod full_analysis;
 mod named_arg;

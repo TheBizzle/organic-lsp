@@ -1,12 +1,11 @@
 grammar;
 
-use crate::core::diagnostics::ParserError;
-
 use crate::lexer::source_loc::MiniLoc;
 use crate::lexer::token::{Token, TokenType};
 
 use crate::parser::ast::{Expr, FuncCall, FuncLiteral, Include, Module, Statement, VarDecl};
 use crate::parser::ast::Operator as Op;
+use crate::parser::diagnostics::ParserError;
 use crate::parser::lalrpop::{as_args, as_formals, as_symbol, Param, sequence};
 
 extern {
