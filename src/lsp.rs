@@ -140,8 +140,9 @@ impl LanguageServer for LspBackend {
         LValue { addr } => doc.infos.get(addr).map_or_else(
           || "Unknown term".to_string(),
           |info_arc| {
-            let LValueInfo { definition, usages, .. } = info_arc.as_ref();
-            describe_defn(definition, usages.iter().next())
+            let LValueInfo { definition, defn_info_opt, usages } = info_arc.as_ref();
+            let ot_opt = defn_info_opt.as_ref().map(|dinfo| dinfo.organic_type.clone());
+            describe_defn(definition, ot_opt, usages.iter().next())
           },
         ),
       };

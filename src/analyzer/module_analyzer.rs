@@ -47,7 +47,7 @@ fn crawl_var_decl(state: &mut AnalysisState, var_decl: VarDecl) {
       OT::Function(_) => HLT::Function,
       _ => HLT::Variable,
     };
-    let defn_info = DefnInfo { hl_type, token: var_decl.name.token };
+    let defn_info = DefnInfo { hl_type, organic_type: typ.clone(), token: var_decl.name.token };
     state.scopes.last_mut().unwrap().env.bindings.insert(var_decl.name.name.clone(), my_addr.clone());
     state.analysis.defn_infos.insert(my_addr.clone(), defn_info);
     state.vars.insert(my_addr, typ);

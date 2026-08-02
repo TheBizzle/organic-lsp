@@ -24,6 +24,7 @@ pub enum HighlightingType {
 #[derive(Debug, Eq, PartialEq)]
 pub struct DefnInfo {
   pub hl_type: HighlightingType,
+  pub organic_type: OrganicType,
   pub token: Token,
 }
 

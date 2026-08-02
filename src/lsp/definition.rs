@@ -8,7 +8,7 @@ use crate::analyzer::value::{Accidental, Note, PitchClass as PC, TermDefn};
 use crate::lsp::pretty_type::pretty_type;
 
 #[must_use]
-pub(super) fn describe_defn(defn: &TermDefn, token_opt: Option<&Token>) -> String {
+pub(super) fn describe_defn(defn: &TermDefn, ot_opt: Option<OT>, token_opt: Option<&Token>) -> String {
   match defn {
     TermDefn::BuiltinConstant { value } => {
       format!(
@@ -29,9 +29,14 @@ pub(super) fn describe_defn(defn: &TermDefn, token_opt: Option<&Token>) -> Strin
       let hertz_3_decimals = (hertz * 1000.0).round() / 1000.0;
       format!("Built-in note `{}` (`{}` Hz)", describe_note(note), hertz_3_decimals)
     },
-    TermDefn::UserDefined { token } => format!("User-defined value: {token:?}"), // TODO: Get
-                                                                                 // type info
-                                                                                 // in here
+    TermDefn::UserDefined { token } => format!(
+      "User-defined value
+```scala
+{}: {}
+```",
+      ident_name(token),
+      pretty_type(&ot_opt.unwrap_or(OT::Unknown))
+    ),
   }
 }
 

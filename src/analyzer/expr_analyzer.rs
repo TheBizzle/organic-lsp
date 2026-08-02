@@ -186,7 +186,7 @@ fn crawl_fn_body(
 
       for (token, ParamInfo(name, typ, _)) in params {
         let my_addr = NamedVarAddress { name: name.clone(), scope_addr: address.clone() };
-        let defn_info = DefnInfo { hl_type: HLT::Parameter, token: token.clone() };
+        let defn_info = DefnInfo { hl_type: HLT::Parameter, organic_type: typ.clone(), token: token.clone() };
 
         state.analysis.definitions.insert(my_addr.clone(), UserDefined { token: token.clone() });
         state.analysis.defn_infos.insert(my_addr.clone(), defn_info);
