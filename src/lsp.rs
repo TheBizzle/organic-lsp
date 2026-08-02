@@ -83,7 +83,7 @@ impl LanguageServer for LspBackend {
   }
 
   async fn code_action(&self, _params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
-    Ok(Some(vec![])) // TODO
+    Ok(Some(vec![])) // TODO (e.g. quick-fixes like declaring undeclared variables)
   }
 
   async fn completion(&self, _params: CompletionParams) -> Result<Option<CompletionResponse>> {
@@ -121,7 +121,7 @@ impl LanguageServer for LspBackend {
     {
       Ok(Some(GotoDefinitionResponse::Scalar(token_to_location(&defn_info.token))))
     } else {
-      Ok(None) // TODO: Probably not actually OK
+      Ok(None)
     }
   }
 
@@ -156,7 +156,7 @@ impl LanguageServer for LspBackend {
 
       Ok(Some(Hover { contents, range: Some(range) }))
     } else {
-      Ok(None) // TODO: Probably not actually OK
+      Ok(None)
     }
   }
 
@@ -172,7 +172,7 @@ impl LanguageServer for LspBackend {
       let locs = info_arc.as_ref().usages.iter().map(token_to_location).collect();
       Ok(Some(locs))
     } else {
-      Ok(None) // TODO: Probably not actually OK
+      Ok(None)
     }
   }
 
