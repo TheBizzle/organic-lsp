@@ -135,8 +135,8 @@ impl LanguageServer for LspBackend {
     {
       let str = match entity {
         NamedArg { name, func_addr, func } => describe_named_arg(name, func_addr, func.as_ref()),
-        NumberLiteral(value) => format!("value of number literal: `{value}`"),
-        StringLiteral(value) => format!("value of string literal: `{value}`"),
+        NumberLiteral(value) => format!("value of `number` literal: `{value}`"),
+        StringLiteral(value) => format!("value of `string` literal: `{value}`"),
         LValue { addr } => doc.infos.get(addr).map_or_else(
           || "Unknown term".to_string(),
           |info_arc| {
