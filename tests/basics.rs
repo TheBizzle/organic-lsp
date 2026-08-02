@@ -100,7 +100,7 @@ mod tests {
     let range1 = Range { start: start1, end: end1 };
     let diagnostic1 = Diagnostic { range: range1, severity, message: message1, ..Default::default() };
 
-    let message2 = "Could not match expected type `Number` with actual type `Unknown`, regarding value `Identifier(\"length\")`.".to_string();
+    let message2 = "Could not match expected type `number` with actual type `???`, regarding value `Identifier(\"length\")`.".to_string();
     let start2 = Position { line: 2, character: 68 };
     let end2 = Position { line: 2, character: 74 };
     let range2 = Range { start: start2, end: end2 };

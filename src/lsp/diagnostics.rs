@@ -18,6 +18,8 @@ use crate::analyzer::diagnostics::AnalyzerWarningType::{
   ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody,
 };
 
+use crate::lsp::pretty_type::pretty_type;
+
 #[derive(Debug)]
 #[allow(clippy::enum_variant_names)]
 pub enum LspError {
@@ -93,9 +95,10 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
       (as_range(&offender.source_loc), msg)
     },
     LspAnalyzerError(AnalyzerError { typ: TypeMismatch { expected, got }, offender }) => {
-      // TODO: In expected type, if it's a function, print that certain args are optional
       let msg = format!(
-        "Could not match expected type `{expected:?}` with actual type `{got:?}`, regarding value `{:?}`.",
+        "Could not match expected type `{}` with actual type `{}`, regarding value `{:?}`.",
+        pretty_type(&expected),
+        pretty_type(&got),
         offender.token_type
       );
       (as_range(&offender.source_loc), msg)
