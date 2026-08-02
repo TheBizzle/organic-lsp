@@ -1,6 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
+use ordered_float::NotNan;
+
 use rangemap::RangeMap;
 
 use tower_lsp_server::ls_types::Diagnostic;
@@ -10,6 +12,7 @@ use crate::core::address::NamedVarAddress;
 use crate::lexer::token::Token;
 
 use crate::analyzer::analysis::DefnInfo;
+use crate::analyzer::function::Function;
 use crate::analyzer::value::TermDefn;
 
 #[derive(Debug, PartialEq)]
@@ -23,9 +26,9 @@ pub struct LValueInfo {
 #[allow(clippy::large_enum_variant)]
 pub enum Entity {
   LValue { addr: NamedVarAddress },
-  NamedArg,
-  NumberLiteral,
-  StringLiteral,
+  NamedArg { name: String, func_addr: NamedVarAddress, func: Arc<Function> },
+  NumberLiteral(NotNan<f64>),
+  StringLiteral(String),
 }
 
 #[derive(Debug)]

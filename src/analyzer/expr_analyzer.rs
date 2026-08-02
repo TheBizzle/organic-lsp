@@ -33,13 +33,13 @@ pub(super) fn crawl_expr(state: &mut AnalysisState, expr: Expr) -> Option<OT> {
     Expr::List { values, .. } => crawl_list(state, values),
     Expr::LValue { name, token } => crawl_lvalue(state, &name, token),
     Expr::Negated { value, token } => crawl_negated(state, *value, token),
-    Expr::Number { token, .. } => {
-      state.analysis.non_var_tokens.push(NonVarToken::Number(token));
+    Expr::Number { value, token } => {
+      state.analysis.non_var_tokens.push(NonVarToken::Number(token, value));
       Some(OT::Number)
     },
     Expr::Op { left, operator, right, .. } => Some(crawl_op(state, *left, &operator, *right)),
-    Expr::String { token, .. } => {
-      state.analysis.non_var_tokens.push(NonVarToken::String(token));
+    Expr::String { value, token } => {
+      state.analysis.non_var_tokens.push(NonVarToken::String(token, value));
       Some(OT::String)
     },
   }
@@ -77,8 +77,12 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: FuncCall) 
 
       match resolve_type(state, &addr) {
         OT::Function(func) => {
-          state.analysis.usages.entry(addr).or_default().insert(token.clone());
-          let named_nvts: Vec<_> = actual_tokens.values().cloned().map(NonVarToken::NamedArg).collect();
+          state.analysis.usages.entry(addr.clone()).or_default().insert(token.clone());
+          let named_nvts: Vec<_> = actual_tokens
+            .values()
+            .cloned()
+            .map(|token| NonVarToken::NamedArg(token, addr.clone(), func.clone()))
+            .collect();
           state.analysis.non_var_tokens.extend(named_nvts);
 
           let mut expecteds: HashMap<_, _> = func

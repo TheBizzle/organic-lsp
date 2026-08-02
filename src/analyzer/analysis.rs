@@ -1,4 +1,7 @@
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
+
+use ordered_float::NotNan;
 
 use crate::core::address::{NamedVarAddress, ScopeAddress};
 use crate::core::diagnostics::{AnalyzerError, AnalyzerWarning};
@@ -6,6 +9,7 @@ use crate::core::diagnostics::{AnalyzerError, AnalyzerWarning};
 use crate::lexer::token::Token;
 
 use crate::analyzer::builtins::{BuiltIns, INITIAL_SCOPE_ADDRESS, initial_state};
+use crate::analyzer::function::Function;
 use crate::analyzer::organic_type::OrganicType;
 use crate::analyzer::scope::{Env, Scope};
 use crate::analyzer::value::TermDefn;
@@ -31,9 +35,9 @@ pub struct Diagnostics {
 
 #[derive(Debug)]
 pub enum NonVarToken {
-  NamedArg(Token),
-  Number(Token),
-  String(Token),
+  NamedArg(Token, NamedVarAddress, Arc<Function>),
+  Number(Token, NotNan<f64>),
+  String(Token, String),
 }
 
 impl NonVarToken {
@@ -45,7 +49,7 @@ impl NonVarToken {
   #[must_use]
   pub const fn token(&self) -> &Token {
     match self {
-      Self::NamedArg(token) | Self::Number(token) | Self::String(token) => token,
+      Self::NamedArg(token, _, _) | Self::Number(token, _) | Self::String(token, _) => token,
     }
   }
 }

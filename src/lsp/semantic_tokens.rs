@@ -130,8 +130,8 @@ fn calc_highlighting_for_ident(source_loc: &SourceLoc, document: &Document) -> S
           },
         }
       }),
-      Entity::NamedArg => SemanticTokenType::PROPERTY,
-      Entity::NumberLiteral | Entity::StringLiteral => panic!("These tokens are not legal here."),
+      Entity::NamedArg { .. } => SemanticTokenType::PROPERTY,
+      Entity::NumberLiteral(_) | Entity::StringLiteral(_) => panic!("These tokens are not legal here."),
     }
   } else {
     SemanticTokenType::VARIABLE

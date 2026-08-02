@@ -3,6 +3,8 @@ mod common;
 mod definition;
 mod document;
 mod full_analysis;
+mod named_arg;
+mod pretty_type;
 mod semantic_tokens;
 
 use std::collections::HashMap;
@@ -27,9 +29,10 @@ use crate::lsp::common::token_to_location;
 use crate::lsp::definition::describe_defn;
 use crate::lsp::document::Entity;
 use crate::lsp::full_analysis::store_and_reanalyze;
+use crate::lsp::named_arg::describe_named_arg;
 use crate::lsp::semantic_tokens::{TOKEN_TYPES, calc_semantic_tokens};
 
-use Entity::LValue;
+use Entity::{LValue, NamedArg, NumberLiteral, StringLiteral};
 
 const DEBUG: MessageType = MessageType::ERROR;
 
@@ -126,16 +129,24 @@ impl LanguageServer for LspBackend {
 
     if let Some(doc) = self.documents.write().await.get(&doc_loc)
       && let Some(line) = doc.entities.get(position.line as usize)
-      && let Some((range, LValue { addr })) = line.get_key_value(&position.character)
-      && let Some(info_arc) = doc.infos.get(addr)
+      && let Some((range, entity)) = line.get_key_value(&position.character)
     {
+      let str = match entity {
+        NamedArg { name, func_addr, func } => describe_named_arg(name, func_addr, func.as_ref()),
+        NumberLiteral(value) => format!("value of number literal: `{value}`"),
+        StringLiteral(value) => format!("value of string literal: `{value}`"),
+        LValue { addr } => doc.infos.get(addr).map_or_else(
+          || "Unknown term".to_string(),
+          |info_arc| describe_defn(&info_arc.as_ref().definition),
+        ),
+      };
+
+      let contents = HoverContents::Scalar(MarkedString::String(str));
+
       let range = TowerRange {
         start: Position { line: position.line, character: range.start },
         end: Position { line: position.line, character: range.end },
       };
-
-      let str = describe_defn(&info_arc.as_ref().definition);
-      let contents = HoverContents::Scalar(MarkedString::String(str));
 
       Ok(Some(Hover { contents, range: Some(range) }))
     } else {

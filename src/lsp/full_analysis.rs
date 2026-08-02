@@ -11,6 +11,7 @@ use crate::core::doc_loc::DocLoc;
 
 use crate::lexer::lex;
 use crate::lexer::source_loc::SourceLoc;
+use crate::lexer::token::{Token, TokenType::Identifier};
 
 use crate::parser::ast::Module;
 use crate::parser::parse;
@@ -88,14 +89,22 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
       },
     );
 
-  for ref nvt in non_var_tokens {
+  for nvt in non_var_tokens {
+    let source_loc = &nvt.token().source_loc.clone();
+
     let entity_type = match nvt {
-      NonVarToken::NamedArg(_) => Entity::NamedArg,
-      NonVarToken::Number(_) => Entity::NumberLiteral,
-      NonVarToken::String(_) => Entity::StringLiteral,
+      NonVarToken::NamedArg(token, func_addr, func) => {
+        if let Token { token_type: Identifier(name), .. } = token {
+          Entity::NamedArg { name, func_addr, func }
+        } else {
+          panic!("Token for parameter name must be an identifier: {token:?}")
+        }
+      },
+      NonVarToken::Number(_, value) => Entity::NumberLiteral(value),
+      NonVarToken::String(_, value) => Entity::StringLiteral(value),
     };
 
-    insert_entity(&mut entities, &nvt.token().source_loc, entity_type);
+    insert_entity(&mut entities, source_loc, entity_type);
   }
 
   let doc = Document { contents: text.clone(), diagnostics, entities, infos };
