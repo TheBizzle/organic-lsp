@@ -7,7 +7,7 @@ pub struct Function {
 }
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct ParamInfo(pub String, pub OrganicType, pub bool); // bool: hasDefault
+pub struct ParamInfo(pub String, pub OrganicType, pub bool); // bool: has_default
 
 impl Function {
   #[must_use]
