@@ -29,7 +29,7 @@ use crate::core::doc_loc::DocLoc;
 use crate::lsp::backend::LspBackend;
 use crate::lsp::common::token_to_location;
 use crate::lsp::definition::describe_defn;
-use crate::lsp::document::Entity;
+use crate::lsp::document::{Entity, LValueInfo};
 use crate::lsp::full_analysis::store_and_reanalyze;
 use crate::lsp::named_arg::describe_named_arg;
 use crate::lsp::semantic_tokens::{TOKEN_TYPES, calc_semantic_tokens};
@@ -139,7 +139,10 @@ impl LanguageServer for LspBackend {
         StringLiteral(value) => format!("value of string literal: `{value}`"),
         LValue { addr } => doc.infos.get(addr).map_or_else(
           || "Unknown term".to_string(),
-          |info_arc| describe_defn(&info_arc.as_ref().definition),
+          |info_arc| {
+            let LValueInfo { definition, usages, .. } = info_arc.as_ref();
+            describe_defn(definition, usages.iter().next())
+          },
         ),
       };
 

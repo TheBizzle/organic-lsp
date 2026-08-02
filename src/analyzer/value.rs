@@ -3,6 +3,7 @@ use strum::EnumIter;
 use crate::lexer::token::Token;
 
 use crate::analyzer::function::Function;
+use crate::analyzer::organic_type::OrganicType as OT;
 
 #[derive(Clone, Debug, EnumIter, Eq, PartialEq)]
 pub enum Accidental {
@@ -23,6 +24,22 @@ pub enum ConstantValue {
   RoundArg,
   SequenceArg,
   String(String),
+}
+
+impl ConstantValue {
+  #[must_use]
+  pub fn as_type(&self) -> OT {
+    match self {
+      Self::AudioEffect => OT::AudioEffect,
+      Self::Boolean(_) => OT::Boolean,
+      Self::List(inner) => OT::List(Box::new(inner.as_type())),
+      Self::Number(_) => OT::Number,
+      Self::RandomArg => OT::RandomArg,
+      Self::RoundArg => OT::RoundArg,
+      Self::SequenceArg => OT::SequenceArg,
+      Self::String(_) => OT::String,
+    }
+  }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

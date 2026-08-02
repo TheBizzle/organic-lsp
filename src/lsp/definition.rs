@@ -1,34 +1,37 @@
-use crate::analyzer::function::Function;
-use crate::analyzer::value::PitchClass as PC;
-use crate::analyzer::value::{Accidental, ConstantValue, Note, TermDefn};
-use ConstantValue as CV;
+use std::sync::Arc;
+
+use crate::lexer::token::{Token, TokenType::Identifier};
+
+use crate::analyzer::organic_type::OrganicType as OT;
+use crate::analyzer::value::{Accidental, Note, PitchClass as PC, TermDefn};
+
+use crate::lsp::pretty_type::pretty_type;
 
 #[must_use]
-pub(super) fn describe_defn(defn: &TermDefn) -> String {
+pub(super) fn describe_defn(defn: &TermDefn, token_opt: Option<&Token>) -> String {
   match defn {
-    TermDefn::BuiltinConstant { value } => format!("Built-in constant: {}", describe_constant(value)),
-    TermDefn::BuiltinFn { value } => format!("Built-in function: {}", describe_function(value)),
+    TermDefn::BuiltinConstant { value } => {
+      format!(
+        "Built-in constant `{}` of type `{}`",
+        ident_name(token_opt.expect("Built-in constant must surely have a token")),
+        pretty_type(&value.as_type())
+      )
+    },
+    TermDefn::BuiltinFn { value } => {
+      format!(
+        "Built-in function `{}` of type `{}`",
+        ident_name(token_opt.expect("Built-in function must surely have a token")),
+        pretty_type(&OT::Function(Arc::new(value.clone())))
+      )
+    },
     TermDefn::BuiltinNote { note } => {
       let hertz = calculate_note(note);
       let hertz_3_decimals = (hertz * 1000.0).round() / 1000.0;
-      format!("Built-in note: {} ({} Hz)", describe_note(note), hertz_3_decimals)
+      format!("Built-in note `{}` (`{}` Hz)", describe_note(note), hertz_3_decimals)
     },
     TermDefn::UserDefined { token } => format!("User-defined value: {token:?}"), // TODO: Get
                                                                                  // type info
                                                                                  // in here
-  }
-}
-
-fn describe_constant(value: &ConstantValue) -> String {
-  match value {
-    CV::AudioEffect => "AudioEffect".to_string(),
-    CV::Boolean(_) => "Boolean".to_string(),
-    CV::List(inner) => format!("List[{}]", describe_constant(inner)),
-    CV::Number(_) => "Number".to_string(),
-    CV::RandomArg => "RandomnessArgument".to_string(), // TODO
-    CV::RoundArg => "RoundArgument".to_string(),       // TODO
-    CV::SequenceArg => "SequenceArgument".to_string(), // TODO
-    CV::String(_) => "String".to_string(),
   }
 }
 
@@ -77,7 +80,10 @@ fn calculate_note(note: &Note) -> f64 {
   440.0 * ((f64::from(semis) - 69.0) / 12.0).exp2()
 }
 
-fn describe_function(func: &Function) -> String {
-  let Function { params, return_type } = func;
-  format!("({params:?}): {return_type:?}") // TODO: Don't just dump debugging output
+fn ident_name(token: &Token) -> &str {
+  if let Identifier(name) = &token.token_type {
+    name
+  } else {
+    panic!("You shouldn't be able to get here with something that isn't an identifier: {token:?}")
+  }
 }
