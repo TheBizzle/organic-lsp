@@ -13,7 +13,7 @@ echo "=== Compile ==="
 cargo check "${cargo_args[@]}"
 
 echo "=== Clippy ==="
-cargo clippy "${cargo_args[@]}" -- -D warnings
+cargo clippy --all-targets "${cargo_args[@]}" -- -D warnings
 
 echo "=== Tests ==="
 cargo test "${cargo_args[@]}"
