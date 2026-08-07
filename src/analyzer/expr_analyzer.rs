@@ -90,7 +90,6 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: FuncCall) 
   }
 }
 
-#[allow(clippy::unnecessary_wraps)]
 fn crawl_verified_function_call(
   state: &mut AnalysisState, token: &Token, addr: &NamedVarAddress,
   actual_tokens: &mut HashMap<String, Token>, actual_args: Vec<ParamInfo>, func: &Arc<Function>,
@@ -115,6 +114,8 @@ fn crawl_verified_function_call(
 
   let keys: HashSet<_> = expecteds.keys().cloned().chain(actuals.keys().cloned()).collect();
 
+  let mut generic_bindings: HashMap<String, OT> = HashMap::new();
+
   for key in keys {
     match (expecteds.remove(&key), actuals.remove(&key)) {
       (None, None) => panic!("Invalid state!  Neither \"expected\" nor \"got\" had key \"{key}\"!"),
@@ -125,7 +126,9 @@ fn crawl_verified_function_call(
       (None, Some(_)) => {
         push_error(state, token.clone(), ExtraArgument { name: key });
       },
-      (Some((expected, _)), Some((got, _))) => {
+      (Some((base_expected, _)), Some((got, _))) => {
+        let expected = find_generic_bindings(&mut generic_bindings, base_expected, &got);
+
         if expected != got {
           if let Some(actual_token) = actual_tokens.remove(&key) {
             push_error(state, actual_token, TypeMismatch { expected, got });
@@ -137,7 +140,29 @@ fn crawl_verified_function_call(
     }
   }
 
-  Some(func.return_type.clone())
+  consume_generic_binding(&mut generic_bindings, &func.return_type)
+}
+
+fn find_generic_bindings(bindings: &mut HashMap<String, OT>, base: OT, got: &OT) -> OT {
+  match base {
+    OT::Generic(name) if let Some(existing_binding) = bindings.get(&name) => existing_binding.clone(),
+    OT::Generic(name) => {
+      bindings.insert(name, got.clone());
+      got.clone()
+    },
+    OT::List(inner) if let OT::List(inner_got) = got => {
+      OT::List(Box::new(find_generic_bindings(bindings, *inner, inner_got)))
+    },
+    _ => base,
+  }
+}
+
+fn consume_generic_binding(bindings: &mut HashMap<String, OT>, typ: &OT) -> Option<OT> {
+  match typ {
+    OT::Generic(name) => bindings.remove(name),
+    OT::List(inner) => consume_generic_binding(bindings, inner).map(|t| OT::List(Box::new(t))),
+    _ => Some(typ.clone()),
+  }
 }
 
 fn crawl_function_def(state: &mut AnalysisState, func: FuncLiteral) -> Option<OT> {

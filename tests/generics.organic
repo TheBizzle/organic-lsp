@@ -1,0 +1,7 @@
+repeat(
+  value: sequence( values: [ hold(value: 0.5, length: 1)
+                           , hold(value: 1, length: 1)
+                           ]
+                 , order: if(condition: true, is-true: forward, is-false: backward)
+                 )
+)

@@ -193,19 +193,22 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
     StdLibFn {
       name: "hold",
       func: Function {
-        params: vec![PI(own("length"), OT::Number, false), PI(own("value"), OT::Number, false)],
-        return_type: OT::Number,
+        params: vec![
+          PI(own("length"), OT::Number, false),
+          PI(own("value"), OT::Generic("Input".to_string()), false),
+        ],
+        return_type: OT::Generic("Input".to_string()),
       },
     },
     StdLibFn {
       name: "if",
       func: Function {
         params: vec![
-          PI(own("is-false"), OT::Number, false),
-          PI(own("is-true"), OT::Number, false),
+          PI(own("is-false"), OT::Generic("Input".to_string()), false),
+          PI(own("is-true"), OT::Generic("Input".to_string()), false),
           PI(own("condition"), OT::Boolean, false),
         ],
-        return_type: OT::Number,
+        return_type: OT::Generic("Input".to_string()),
       },
     },
     StdLibFn {
@@ -301,8 +304,11 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
     StdLibFn {
       name: "repeat",
       func: Function {
-        params: vec![PI(own("repeats"), OT::Number, true), PI(own("value"), OT::Number, false)],
-        return_type: OT::Number,
+        params: vec![
+          PI(own("repeats"), OT::Number, true),
+          PI(own("value"), OT::Generic("Input".to_string()), false),
+        ],
+        return_type: OT::Generic("Input".to_string()),
       },
     },
     StdLibFn {
@@ -352,9 +358,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       func: Function {
         params: vec![
           PI(own("order"), OT::SequenceArg, true),
-          PI(own("values"), OT::List(Box::new(OT::Number)), false),
+          PI(own("values"), OT::List(Box::new(OT::Generic("Input".to_string()))), false),
         ],
-        return_type: OT::Number,
+        return_type: OT::Generic("Input".to_string()),
       },
     },
     StdLibFn {
@@ -408,8 +414,11 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
     StdLibFn {
       name: "trigger",
       func: Function {
-        params: vec![PI(own("value"), OT::Number, false), PI(own("condition"), OT::Boolean, false)],
-        return_type: OT::Number,
+        params: vec![
+          PI(own("value"), OT::Generic("Input".to_string()), false),
+          PI(own("condition"), OT::Boolean, false),
+        ],
+        return_type: OT::Generic("Input".to_string()),
       },
     },
   ]

@@ -6,6 +6,7 @@ use crate::analyzer::function::Function as Func;
 pub enum OrganicType {
   AudioEffect,
   Boolean,
+  Generic(String),
   Function(Arc<Func>),
   List(Box<Self>),
   Number,

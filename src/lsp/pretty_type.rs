@@ -6,6 +6,7 @@ pub(super) fn pretty_type(typ: &OT) -> String {
     OT::AudioEffect => "effect".to_string(),
     OT::Boolean => "true/false".to_string(),
     OT::Function(func) => pretty_func(func.as_ref()),
+    OT::Generic(name) => format!("<{name}>"),
     OT::List(subtype) => format!("[{}]", pretty_type(subtype)),
     OT::Number => "number".to_string(),
     OT::RandomArg => "random-type".to_string(),

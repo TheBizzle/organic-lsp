@@ -180,6 +180,11 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn can_open_generics() {
+    test_no_problem("./tests/generics").await;
+  }
+
+  #[tokio::test]
   #[should_panic(expected = "No such file or directory")]
   async fn fails_to_open_nonexistent() {
     test_errors("./Organic/examples/doopy", Vec::new()).await;
