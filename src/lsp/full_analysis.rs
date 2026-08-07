@@ -18,11 +18,11 @@ use crate::parser::parse;
 use crate::analyzer::analysis::{Analysis, NonVarToken};
 use crate::analyzer::analyze;
 use crate::analyzer::diagnostics::AnalyzerDiagnostic;
-use crate::analyzer::diagnostics::AnalyzerDiagnosticType::{AnalyzerError, AnalyzerWarning};
+use crate::analyzer::diagnostics::AnalyzerDiagnosticType::{AnalyzerError, AnalyzerLint, AnalyzerWarning};
 
 use crate::lsp::backend::LspBackend;
 use crate::lsp::common::source_loc_to_range;
-use crate::lsp::diagnostics::{LspError, error_as_diagnostic, warning_as_diagnostic};
+use crate::lsp::diagnostics::{LspError, error_as_diagnostic, lint_as_diagnostic, warning_as_diagnostic};
 use crate::lsp::document::{Document, Entity, LValueInfo};
 
 use LspError::{LspAnalyzerError, LspLexerError, LspParserError};
@@ -47,14 +47,15 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     }
   };
 
-  let (warnings, errors): (Vec<_>, Vec<_>) = analyzer_diagnostics.into_iter().fold(
-    (Vec::new(), Vec::new()),
-    |(mut ws, mut es), AnalyzerDiagnostic { typ: t, offender }| {
+  let (lints, warnings, errors): (Vec<_>, Vec<_>, Vec<_>) = analyzer_diagnostics.into_iter().fold(
+    (Vec::new(), Vec::new(), Vec::new()),
+    |(mut ls, mut ws, mut es), AnalyzerDiagnostic { typ: t, offender }| {
       match t {
         AnalyzerError(typ) => es.push(LspAnalyzerError { typ, offender }),
+        AnalyzerLint(typ) => ls.push((typ, offender)),
         AnalyzerWarning(typ) => ws.push((typ, offender)),
       }
-      (ws, es)
+      (ls, ws, es)
     },
   );
 
@@ -62,7 +63,8 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     .into_iter()
     .chain(pre_errors)
     .map(error_as_diagnostic)
-    .chain(warnings.into_iter().map(|(typ, offender)| warning_as_diagnostic(&typ, offender)))
+    .chain(warnings.iter().map(|(typ, offender)| warning_as_diagnostic(typ, offender)))
+    .chain(lints.into_iter().map(|(typ, offender)| lint_as_diagnostic(&typ, offender)))
     .collect();
   this.client.publish_diagnostics(uri, diagnostics.clone(), None).await;
 

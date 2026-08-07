@@ -17,7 +17,7 @@ mod tests {
 
   #[tokio::test]
   async fn can_open_cascade() {
-    let severity = Some(DiagnosticSeverity::WARNING);
+    let severity = Some(DiagnosticSeverity::HINT);
 
     let message1 =
       "Variable `note_attack` should have a `kebab-case` name (e.g. `note-attack`), but it's in `snake_case`"
@@ -29,7 +29,7 @@ mod tests {
     let diagnostic1 = Diagnostic {
       range: range1,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message1,
       ..Default::default()
     };
@@ -44,7 +44,7 @@ mod tests {
     let diagnostic2 = Diagnostic {
       range: range2,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message2,
       ..Default::default()
     };
@@ -54,7 +54,7 @@ mod tests {
 
   #[tokio::test]
   async fn can_open_chord_swell() {
-    let severity = Some(DiagnosticSeverity::WARNING);
+    let severity = Some(DiagnosticSeverity::HINT);
 
     let message =
       "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
@@ -64,14 +64,14 @@ mod tests {
     let end = Position { line: 0, character: 11 };
     let range = Range { start, end };
     let diagnostic =
-      Diagnostic { range, severity, code: code(DC::Analyzer_Warning_SnakeCase), message, ..Default::default() };
+      Diagnostic { range, severity, code: code(DC::Analyzer_Lint_SnakeCase), message, ..Default::default() };
 
     test_errors("./Organic/examples/chord_swell", vec![diagnostic]).await;
   }
 
   #[tokio::test]
   async fn can_open_groovy_bass() {
-    let severity = Some(DiagnosticSeverity::WARNING);
+    let severity = Some(DiagnosticSeverity::HINT);
 
     let message1 =
       "Variable `note_attack` should have a `kebab-case` name (e.g. `note-attack`), but it's in `snake_case`"
@@ -83,7 +83,7 @@ mod tests {
     let diagnostic1 = Diagnostic {
       range: range1,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message1,
       ..Default::default()
     };
@@ -98,7 +98,7 @@ mod tests {
     let diagnostic2 = Diagnostic {
       range: range2,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message2,
       ..Default::default()
     };
@@ -113,7 +113,7 @@ mod tests {
     let diagnostic3 = Diagnostic {
       range: range3,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message3,
       ..Default::default()
     };
@@ -128,7 +128,7 @@ mod tests {
     let diagnostic4 = Diagnostic {
       range: range4,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message4,
       ..Default::default()
     };
@@ -143,7 +143,7 @@ mod tests {
     let diagnostic5 = Diagnostic {
       range: range5,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message5,
       ..Default::default()
     };
@@ -162,7 +162,7 @@ mod tests {
 
   #[tokio::test]
   async fn can_open_siren() {
-    let severity = Some(DiagnosticSeverity::WARNING);
+    let severity = Some(DiagnosticSeverity::HINT);
 
     let message =
       "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
@@ -172,14 +172,14 @@ mod tests {
     let end = Position { line: 0, character: 11 };
     let range = Range { start, end };
     let diagnostic =
-      Diagnostic { range, severity, code: code(DC::Analyzer_Warning_SnakeCase), message, ..Default::default() };
+      Diagnostic { range, severity, code: code(DC::Analyzer_Lint_SnakeCase), message, ..Default::default() };
 
     test_errors("./Organic/examples/siren", vec![diagnostic]).await;
   }
 
   #[tokio::test]
   async fn can_open_spread_phase() {
-    let severity = Some(DiagnosticSeverity::WARNING);
+    let severity = Some(DiagnosticSeverity::HINT);
 
     let message1 = "Variable `phase_length` should have a `kebab-case` name (e.g. `phase-length`), but it's in `snake_case`".to_string();
 
@@ -189,7 +189,7 @@ mod tests {
     let diagnostic1 = Diagnostic {
       range: range1,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message1,
       ..Default::default()
     };
@@ -204,7 +204,7 @@ mod tests {
     let diagnostic2 = Diagnostic {
       range: range2,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message2,
       ..Default::default()
     };
@@ -219,7 +219,7 @@ mod tests {
     let diagnostic3 = Diagnostic {
       range: range3,
       severity,
-      code: code(DC::Analyzer_Warning_SnakeCase),
+      code: code(DC::Analyzer_Lint_SnakeCase),
       message: message3,
       ..Default::default()
     };

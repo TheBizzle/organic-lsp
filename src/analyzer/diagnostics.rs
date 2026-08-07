@@ -11,6 +11,7 @@ pub struct AnalyzerDiagnostic {
 #[derive(Debug)]
 pub enum AnalyzerDiagnosticType {
   AnalyzerError(AnalyzerErrorType),
+  AnalyzerLint(AnalyzerLintType),
   AnalyzerWarning(AnalyzerWarningType),
 }
 
@@ -28,10 +29,14 @@ pub enum AnalyzerErrorType {
 }
 
 #[derive(Debug)]
+pub enum AnalyzerLintType {
+  CamelCase,
+  SnakeCase,
+}
+
+#[derive(Debug)]
 pub enum AnalyzerWarningType {
   ArgOverridesPrevious,
-  CamelCase,
   IntermediateCallInFnDef,
-  SnakeCase,
   UselessFnBody,
 }

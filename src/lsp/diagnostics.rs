@@ -10,15 +10,15 @@ use crate::parser::diagnostics::ParserError::{
   self, ExtraToken, FictionalToken, MissingParameterValue, UnexpectedEOF, WrongToken,
 };
 
-use crate::analyzer::diagnostics::{AnalyzerErrorType, AnalyzerWarningType};
-
 use crate::analyzer::diagnostics::AnalyzerErrorType::{
-  BadInternalState, DuplicateParameter, DuplicateVar, ExtraArgument, MissingArgument, NoSuchFn,
+  self, BadInternalState, DuplicateParameter, DuplicateVar, ExtraArgument, MissingArgument, NoSuchFn,
   NoSuchVariable, TypeMismatch, VarCannotInitInTermsOfSelf,
 };
 
+use crate::analyzer::diagnostics::AnalyzerLintType::{self, CamelCase, SnakeCase};
+
 use crate::analyzer::diagnostics::AnalyzerWarningType::{
-  ArgOverridesPrevious, CamelCase, IntermediateCallInFnDef, SnakeCase, UselessFnBody,
+  self, ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody,
 };
 
 use crate::lsp::kebab_cased::kebab_cased;
@@ -36,7 +36,7 @@ use LspError::{LspAnalyzerError, LspLexerError, LspParserError};
 #[derive(FromRepr, EnumCount, Eq, PartialEq)]
 #[repr(i32)]
 #[allow(non_camel_case_types)]
-pub(super) enum DiagnosticCode {
+pub enum DiagnosticCode {
   Lexer_Error_FileTooBig,
   Lexer_Error_UnknownToken,
   Parser_Error_ExtraToken,
@@ -53,10 +53,10 @@ pub(super) enum DiagnosticCode {
   Analyzer_Error_NoSuchVariable,
   Analyzer_Error_TypeMismatch,
   Analyzer_Error_VarCannotInitInTermsOfSelf,
+  Analyzer_Lint_CamelCase,
+  Analyzer_Lint_SnakeCase,
   Analyzer_Warning_ArgOverridesPrevious,
-  Analyzer_Warning_CamelCase,
   Analyzer_Warning_IntermediateCallInFnDef,
-  Analyzer_Warning_SnakeCase,
   Analyzer_Warning_UselessFnBody,
 }
 use DiagnosticCode as DC;
@@ -144,36 +144,24 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
     },
   };
 
-  Diagnostic {
-    range,
-    severity: Some(DiagnosticSeverity::ERROR),
-    message,
-    code: Some(NumberOrString::Number(diag_code as i32)),
-    ..Default::default()
-  }
+  mk_diagnostic(DiagnosticSeverity::ERROR, range, diag_code, message)
 }
 
+/// # Panics
+/// When wrongly-cased identifier is not actually an identifier somehow
 #[must_use]
-pub fn warning_as_diagnostic(warning: &AnalyzerWarningType, offender: Token) -> Diagnostic {
-  let (range, message, diag_code) = match warning {
-    ArgOverridesPrevious => {
-      let msg = "This argument overrides a previous one of the same name";
-      (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_ArgOverridesPrevious)
-    },
+pub fn lint_as_diagnostic(lint: &AnalyzerLintType, offender: Token) -> Diagnostic {
+  let (range, message, diag_code) = match lint {
     CamelCase => {
       if let Identifier(name) = offender.token_type {
         let msg = format!(
           "Variable `{name}` should have a `kebab-case` name (e.g. `{}`), but it's in `camelCase`",
           kebab_cased(&name)
         );
-        (as_range(&offender.source_loc), msg, DC::Analyzer_Warning_CamelCase)
+        (as_range(&offender.source_loc), msg, DC::Analyzer_Lint_CamelCase)
       } else {
         panic!("Impossible snake-cased non-identifer identifier: {offender:?}")
       }
-    },
-    IntermediateCallInFnDef => {
-      let msg = "This function call does nothing, since it is not the last statement";
-      (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_IntermediateCallInFnDef)
     },
     SnakeCase => {
       if let Identifier(name) = offender.token_type {
@@ -181,10 +169,26 @@ pub fn warning_as_diagnostic(warning: &AnalyzerWarningType, offender: Token) -> 
           "Variable `{name}` should have a `kebab-case` name (e.g. `{}`), but it's in `snake_case`",
           kebab_cased(&name)
         );
-        (as_range(&offender.source_loc), msg, DC::Analyzer_Warning_SnakeCase)
+        (as_range(&offender.source_loc), msg, DC::Analyzer_Lint_SnakeCase)
       } else {
         panic!("Impossible snake-cased non-identifer identifier: {offender:?}")
       }
+    },
+  };
+
+  mk_diagnostic(DiagnosticSeverity::HINT, range, diag_code, message)
+}
+
+#[must_use]
+pub fn warning_as_diagnostic(warning: &AnalyzerWarningType, offender: &Token) -> Diagnostic {
+  let (range, message, diag_code) = match warning {
+    ArgOverridesPrevious => {
+      let msg = "This argument overrides a previous one of the same name";
+      (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_ArgOverridesPrevious)
+    },
+    IntermediateCallInFnDef => {
+      let msg = "This function call does nothing, since it is not the last statement";
+      (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_IntermediateCallInFnDef)
     },
     UselessFnBody => {
       let msg =
@@ -193,11 +197,17 @@ pub fn warning_as_diagnostic(warning: &AnalyzerWarningType, offender: Token) -> 
     },
   };
 
+  mk_diagnostic(DiagnosticSeverity::WARNING, range, diag_code, message)
+}
+
+fn mk_diagnostic(
+  severity: DiagnosticSeverity, range: Range, code: DiagnosticCode, message: String,
+) -> Diagnostic {
   Diagnostic {
     range,
-    severity: Some(DiagnosticSeverity::WARNING),
+    severity: Some(severity),
     message,
-    code: Some(NumberOrString::Number(diag_code as i32)),
+    code: Some(NumberOrString::Number(code as i32)),
     ..Default::default()
   }
 }

@@ -1,9 +1,10 @@
+pub mod diagnostics;
+
 mod backend;
 mod builtins;
 mod code_action;
 mod common;
 mod definition;
-mod diagnostics;
 mod document;
 mod full_analysis;
 mod kebab_cased;

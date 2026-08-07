@@ -41,8 +41,8 @@ pub(super) fn actions_in_diagnostics(
 
     if let Some(NumberOrString::Number(code)) = diagnostic.code
       && let Some(diag_code) = DiagnosticCode::from_repr(code)
-      && (diag_code == DiagnosticCode::Analyzer_Warning_CamelCase
-        || diag_code == DiagnosticCode::Analyzer_Warning_SnakeCase)
+      && (diag_code == DiagnosticCode::Analyzer_Lint_CamelCase
+        || diag_code == DiagnosticCode::Analyzer_Lint_SnakeCase)
       && let Some(LValue { addr }) = doc.entities[line].get(&column)
       && let Some(info_arc) = doc.infos.get(addr)
       && let UserDefined { token: Token { token_type: Identifier(name), .. } } = &info_arc.as_ref().definition
