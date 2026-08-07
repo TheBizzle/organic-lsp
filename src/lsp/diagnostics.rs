@@ -1,4 +1,6 @@
-use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, Position, Range};
+use strum::{EnumCount, FromRepr};
+
+use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Position, Range};
 
 use crate::lexer::diagnostics::LexerError::{self, FileTooBig, UnknownToken};
 use crate::lexer::source_loc::{MiniLoc, SourceLoc};
@@ -29,9 +31,35 @@ pub enum LspError {
 }
 use LspError::{LspAnalyzerError, LspLexerError, LspParserError};
 
+#[derive(FromRepr, EnumCount, Eq, PartialEq)]
+#[repr(i32)]
+#[allow(non_camel_case_types)]
+pub(super) enum DiagnosticCode {
+  Lexer_Error_FileTooBig,
+  Lexer_Error_UnknownToken,
+  Parser_Error_ExtraToken,
+  Parser_Error_FictionalToken,
+  Parser_Error_MissingParameterValue,
+  Parser_Error_UnexpectedEOF,
+  Parser_Error_WrongToken,
+  Analyzer_Error_BadInternalState,
+  Analyzer_Error_DuplicateParameter,
+  Analyzer_Error_DuplicateVar,
+  Analyzer_Error_ExtraArgument,
+  Analyzer_Error_MissingArgument,
+  Analyzer_Error_NoSuchFn,
+  Analyzer_Error_NoSuchVariable,
+  Analyzer_Error_TypeMismatch,
+  Analyzer_Error_VarCannotInitInTermsOfSelf,
+  Analyzer_Warning_ArgOverridesPrevious,
+  Analyzer_Warning_IntermediateCallInFnDef,
+  Analyzer_Warning_UselessFnBody,
+}
+use DiagnosticCode as DC;
+
 #[must_use]
 pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
-  let (range, message) = match error {
+  let (range, message, diag_code) = match error {
     LspLexerError(FileTooBig { size, line_num }) => {
       let range = Range {
         start: Position { line: 0, character: 0 },
@@ -41,58 +69,61 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
         "This file is too large!  organic-lsp can only handle values up to {} characters in size, but this file has at least {size} characters",
         u32::MAX
       );
-      (range, msg)
+      (range, msg, DC::Lexer_Error_FileTooBig)
     },
     LspLexerError(UnknownToken { culprit, source_loc }) => {
-      (as_range(&source_loc), format!("Unknown token: {culprit}"))
+      (as_range(&source_loc), format!("Unknown token: {culprit}"), DC::Lexer_Error_UnknownToken)
     },
 
     LspParserError(ExtraToken { token }) => {
-      (as_range(&token.source_loc), format!("Token found after EOF: {:?}", token.token_type))
+      let dc = DC::Parser_Error_ExtraToken;
+      (as_range(&token.source_loc), format!("Token found after EOF: {:?}", token.token_type), dc)
     },
     LspParserError(FictionalToken { location }) => {
-      (as_range_mini(location), format!("Unparseable token type at location: {location:?}"))
+      let dc = DC::Parser_Error_FictionalToken;
+      (as_range_mini(location), format!("Unparseable token type at location: {location:?}"), dc)
     },
     LspParserError(MissingParameterValue { token }) => {
       let msg = "Parameter name requires accompanying value";
-      (as_range(&token.source_loc), msg.to_string())
+      (as_range(&token.source_loc), msg.to_string(), DC::Parser_Error_MissingParameterValue)
     },
     LspParserError(UnexpectedEOF { location, expected }) => {
-      (as_range_mini(location), format!("Unexpected EOF at location {location:?}\nExpected: ${expected:?}"))
+      let msg = format!("Unexpected EOF at location {location:?}\nExpected: ${expected:?}");
+      (as_range_mini(location), msg, DC::Parser_Error_UnexpectedEOF)
     },
     LspParserError(WrongToken { token, expected }) => {
       let msg = format!("Wrong token for this context: {token:?}\nExpected: ${expected:?}");
-      (as_range(&token.source_loc), msg)
+      (as_range(&token.source_loc), msg, DC::Parser_Error_WrongToken)
     },
 
     LspAnalyzerError(AnalyzerError { typ: BadInternalState, offender }) => {
       let msg = format!("Fatal internal error on `{:?}`", offender.token_type);
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_BadInternalState)
     },
     LspAnalyzerError(AnalyzerError { typ: DuplicateParameter, offender }) => {
       let msg = format!("This function already has a parameter named \"{:?}\"", offender.token_type);
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_DuplicateParameter)
     },
     LspAnalyzerError(AnalyzerError { typ: DuplicateVar, offender }) => {
       let msg = format!("Duplicate variable: {:?}", offender.token_type);
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_DuplicateVar)
     },
     LspAnalyzerError(AnalyzerError { typ: ExtraArgument { name }, offender }) => {
       let msg = format!("Unexpected argument to function \"{:?}\": {name}", offender.token_type);
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_ExtraArgument)
     },
     LspAnalyzerError(AnalyzerError { typ: MissingArgument { name, typ }, offender }) => {
       let msg =
         format!("Missing argument of type \"{:?}\" to function \"{:?}\": {name}", typ, offender.token_type);
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_MissingArgument)
     },
     LspAnalyzerError(AnalyzerError { typ: NoSuchFn, offender }) => {
       let msg = format!("No such function: {:?}", offender.token_type);
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_NoSuchFn)
     },
     LspAnalyzerError(AnalyzerError { typ: NoSuchVariable, offender }) => {
       let msg = format!("No such variable: {:?}", offender.token_type);
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_NoSuchVariable)
     },
     LspAnalyzerError(AnalyzerError { typ: TypeMismatch { expected, got }, offender }) => {
       let msg = format!(
@@ -101,36 +132,48 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
         pretty_type(&got),
         offender.token_type
       );
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_TypeMismatch)
     },
     LspAnalyzerError(AnalyzerError { typ: VarCannotInitInTermsOfSelf, offender }) => {
       let msg = format!("`{:?}` cannot be defined in terms of itself", offender.token_type);
-      (as_range(&offender.source_loc), msg)
+      (as_range(&offender.source_loc), msg, DC::Analyzer_Error_VarCannotInitInTermsOfSelf)
     },
   };
 
-  Diagnostic { range, severity: Some(DiagnosticSeverity::ERROR), message, ..Default::default() }
+  Diagnostic {
+    range,
+    severity: Some(DiagnosticSeverity::ERROR),
+    message,
+    code: Some(NumberOrString::Number(diag_code as i32)),
+    ..Default::default()
+  }
 }
 
 #[must_use]
 pub fn warning_as_diagnostic(warning: AnalyzerWarning) -> Diagnostic {
-  let (range, message) = match warning {
+  let (range, message, diag_code) = match warning {
     AnalyzerWarning { typ: ArgOverridesPrevious, offender } => {
       let msg = "This argument overrides a previous one of the same name";
-      (as_range(&offender.source_loc), msg.to_string())
+      (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_ArgOverridesPrevious)
     },
     AnalyzerWarning { typ: IntermediateCallInFnDef, offender } => {
       let msg = "This function call does nothing, since it is not the last statement";
-      (as_range(&offender.source_loc), msg.to_string())
+      (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_IntermediateCallInFnDef)
     },
     AnalyzerWarning { typ: UselessFnBody, offender } => {
       let msg =
         "This entire function body does nothing, since it does not call a function in its final statement";
-      (as_range(&offender.source_loc), msg.to_string())
+      (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_UselessFnBody)
     },
   };
 
-  Diagnostic { range, severity: Some(DiagnosticSeverity::WARNING), message, ..Default::default() }
+  Diagnostic {
+    range,
+    severity: Some(DiagnosticSeverity::WARNING),
+    message,
+    code: Some(NumberOrString::Number(diag_code as i32)),
+    ..Default::default()
+  }
 }
 
 const fn as_range_mini(mini: MiniLoc) -> Range {

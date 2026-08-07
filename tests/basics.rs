@@ -7,7 +7,8 @@ mod tests {
 
   use tower_lsp_server::LanguageServer;
   use tower_lsp_server::ls_types::{
-    Diagnostic, DiagnosticSeverity, DidOpenTextDocumentParams, Position, Range, TextDocumentItem,
+    Diagnostic, DiagnosticSeverity, DidOpenTextDocumentParams, NumberOrString, Position, Range,
+    TextDocumentItem,
   };
 
   use organic_lsp::core::doc_loc::DocLoc;
@@ -60,19 +61,21 @@ mod tests {
     let start1 = Position { line: 0, character: 20 };
     let end1 = Position { line: 0, character: 21 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 = Diagnostic { range: range1, severity, message: eof_message, ..Default::default() };
+    let diagnostic1 =
+      Diagnostic { range: range1, severity, code: code(5), message: eof_message, ..Default::default() };
 
     let message = "Unknown token: '".to_string();
 
     let start2 = Position { line: 0, character: 9 };
     let end2 = Position { line: 0, character: 10 };
     let range2 = Range { start: start2, end: end2 };
-    let diagnostic2 = Diagnostic { range: range2, severity, message: message.clone(), ..Default::default() };
+    let diagnostic2 =
+      Diagnostic { range: range2, severity, code: code(1), message: message.clone(), ..Default::default() };
 
     let start3 = Position { line: 0, character: 20 };
     let end3 = Position { line: 0, character: 21 };
     let range3 = Range { start: start3, end: end3 };
-    let diagnostic3 = Diagnostic { range: range3, severity, message, ..Default::default() };
+    let diagnostic3 = Diagnostic { range: range3, severity, code: code(1), message, ..Default::default() };
 
     test_errors("./tests/invalid_lex", vec![diagnostic1, diagnostic2, diagnostic3]).await;
   }
@@ -85,7 +88,8 @@ mod tests {
     let start1 = Position { line: 0, character: 4 };
     let end1 = Position { line: 0, character: 10 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 = Diagnostic { range: range1, severity, message: message.clone(), ..Default::default() };
+    let diagnostic1 =
+      Diagnostic { range: range1, severity, code: code(6), message: message.clone(), ..Default::default() };
 
     test_errors("./tests/invalid_parse", vec![diagnostic1]).await;
   }
@@ -98,13 +102,15 @@ mod tests {
     let start1 = Position { line: 2, character: 76 };
     let end1 = Position { line: 2, character: 87 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 = Diagnostic { range: range1, severity, message: message1, ..Default::default() };
+    let diagnostic1 =
+      Diagnostic { range: range1, severity, code: code(13), message: message1, ..Default::default() };
 
     let message2 = "Could not match expected type `number` with actual type `???`, regarding value `Identifier(\"length\")`.".to_string();
     let start2 = Position { line: 2, character: 68 };
     let end2 = Position { line: 2, character: 74 };
     let range2 = Range { start: start2, end: end2 };
-    let diagnostic2 = Diagnostic { range: range2, severity, message: message2, ..Default::default() };
+    let diagnostic2 =
+      Diagnostic { range: range2, severity, code: code(14), message: message2, ..Default::default() };
 
     test_errors("./tests/invalid_analysis", vec![diagnostic1, diagnostic2]).await;
   }
@@ -139,5 +145,10 @@ mod tests {
       .await;
 
     backend.documents.read().await.get(&DocLoc::new(mini_uri)).unwrap().diagnostics.clone()
+  }
+
+  #[allow(clippy::unnecessary_wraps)]
+  fn code(n: i32) -> Option<NumberOrString> {
+    Some(NumberOrString::Number(n))
   }
 }
