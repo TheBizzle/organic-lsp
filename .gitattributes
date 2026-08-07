@@ -1,1 +1,3 @@
 *.lalrpop linguist-language=Yacc
+
+tests/crlf_lex.organic text eol=crlf

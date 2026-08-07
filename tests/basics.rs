@@ -175,6 +175,11 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn can_open_crlf_lex() {
+    test_no_problem("./tests/crlf_lex").await;
+  }
+
+  #[tokio::test]
   #[should_panic(expected = "No such file or directory")]
   async fn fails_to_open_nonexistent() {
     test_errors("./Organic/examples/doopy", Vec::new()).await;

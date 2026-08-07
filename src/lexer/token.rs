@@ -52,7 +52,7 @@ pub enum TokenType {
   #[token("<=")]
   LessThanEquals,
 
-  #[token("\n")]
+  #[regex(r"\r?\n")]
   Newline,
   #[regex(r"[0-9]+(\.[0-9]+)?", |lex| NotNan::new(lex.slice().parse::<f64>().unwrap()).unwrap())]
   Number(NotNan<f64>),
