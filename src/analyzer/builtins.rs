@@ -160,6 +160,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "granulate",
       func: Function {
         params: vec![
+          PI(own("sample"), OT::String, false),
           PI(
             own("shape"),
             OT::Function(Arc::new(Function {
@@ -170,7 +171,6 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
           ),
           PI(own("length"), OT::Number, true),
           PI(own("grains"), OT::Number, true),
-          PI(own("sample"), OT::String, false),
           PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
@@ -293,10 +293,10 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "random",
       func: Function {
         params: vec![
-          PI(own("type"), OT::RandomArg, true),
           PI(own("length"), OT::Number, false),
           PI(own("to"), OT::Number, false),
           PI(own("from"), OT::Number, false),
+          PI(own("type"), OT::RandomArg, true),
         ],
         return_type: OT::Number,
       },
@@ -305,8 +305,8 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "repeat",
       func: Function {
         params: vec![
-          PI(own("repeats"), OT::Number, true),
           PI(own("value"), OT::Generic("Input".to_string()), false),
+          PI(own("repeats"), OT::Number, true),
         ],
         return_type: OT::Generic("Input".to_string()),
       },
@@ -322,9 +322,9 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "round",
       func: Function {
         params: vec![
+          PI(own("value"), OT::Number, false),
           PI(own("direction"), OT::RoundArg, true),
           PI(own("step"), OT::Number, true),
-          PI(own("value"), OT::Number, false),
         ],
         return_type: OT::Number,
       },
@@ -357,8 +357,8 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
       name: "sequence",
       func: Function {
         params: vec![
-          PI(own("order"), OT::SequenceArg, true),
           PI(own("values"), OT::List(Box::new(OT::Generic("Input".to_string()))), false),
+          PI(own("order"), OT::SequenceArg, true),
         ],
         return_type: OT::Generic("Input".to_string()),
       },

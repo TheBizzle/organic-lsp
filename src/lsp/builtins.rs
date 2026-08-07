@@ -31,10 +31,10 @@ static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new(|| {
       "granulate",
       "FILL_IN",
       HashMap::from([
+        ("sample", "FILL_IN"),
         ("shape", "FILL_IN"),
         ("length", "FILL_IN"),
         ("grains", "FILL_IN"),
-        ("sample", "FILL_IN"),
         ("effects", "FILL_IN"),
         ("pan", "FILL_IN"),
         ("volume", "FILL_IN"),
@@ -77,14 +77,14 @@ static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new(|| {
     (
       "random",
       "FILL_IN",
-      HashMap::from([("type", "FILL_IN"), ("length", "FILL_IN"), ("to", "FILL_IN"), ("from", "FILL_IN")]),
+      HashMap::from([("length", "FILL_IN"), ("to", "FILL_IN"), ("from", "FILL_IN"), ("type", "FILL_IN")]),
     ),
-    ("repeat", "FILL_IN", HashMap::from([("repeats", "FILL_IN"), ("value", "FILL_IN")])),
+    ("repeat", "FILL_IN", HashMap::from([("value", "FILL_IN"), ("repeats", "FILL_IN")])),
     ("reverb", "FILL_IN", HashMap::from([("length", "FILL_IN"), ("mix", "FILL_IN")])),
     (
       "round",
       "FILL_IN",
-      HashMap::from([("direction", "FILL_IN"), ("step", "FILL_IN"), ("value", "FILL_IN")]),
+      HashMap::from([("value", "FILL_IN"), ("direction", "FILL_IN"), ("step", "FILL_IN")]),
     ),
     (
       "sample",
@@ -101,7 +101,7 @@ static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new(|| {
         ("volume", "FILL_IN"),
       ]),
     ),
-    ("sequence", "FILL_IN", HashMap::from([("order", "FILL_IN"), ("values", "FILL_IN")])),
+    ("sequence", "FILL_IN", HashMap::from([("values", "FILL_IN"), ("order", "FILL_IN")])),
     (
       "sine",
       "FILL_IN",
