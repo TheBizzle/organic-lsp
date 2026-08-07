@@ -12,6 +12,7 @@ mod tests {
   };
 
   use organic_lsp::core::doc_loc::DocLoc;
+  use organic_lsp::lsp::diagnostics::DiagnosticCode as DC;
   use organic_lsp::lsp::new_lsp;
 
   #[tokio::test]
@@ -25,8 +26,13 @@ mod tests {
     let start1 = Position { line: 0, character: 0 };
     let end1 = Position { line: 0, character: 11 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 =
-      Diagnostic { range: range1, severity, code: code(19), message: message1, ..Default::default() };
+    let diagnostic1 = Diagnostic {
+      range: range1,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message1,
+      ..Default::default()
+    };
 
     let message2 =
       "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
@@ -35,8 +41,13 @@ mod tests {
     let start2 = Position { line: 1, character: 0 };
     let end2 = Position { line: 1, character: 11 };
     let range2 = Range { start: start2, end: end2 };
-    let diagnostic2 =
-      Diagnostic { range: range2, severity, code: code(19), message: message2, ..Default::default() };
+    let diagnostic2 = Diagnostic {
+      range: range2,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message2,
+      ..Default::default()
+    };
 
     test_errors("./Organic/examples/cascade", vec![diagnostic1, diagnostic2]).await;
   }
@@ -52,7 +63,8 @@ mod tests {
     let start = Position { line: 0, character: 0 };
     let end = Position { line: 0, character: 11 };
     let range = Range { start, end };
-    let diagnostic = Diagnostic { range, severity, code: code(19), message, ..Default::default() };
+    let diagnostic =
+      Diagnostic { range, severity, code: code(DC::Analyzer_Warning_SnakeCase), message, ..Default::default() };
 
     test_errors("./Organic/examples/chord_swell", vec![diagnostic]).await;
   }
@@ -68,8 +80,13 @@ mod tests {
     let start1 = Position { line: 0, character: 0 };
     let end1 = Position { line: 0, character: 11 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 =
-      Diagnostic { range: range1, severity, code: code(19), message: message1, ..Default::default() };
+    let diagnostic1 = Diagnostic {
+      range: range1,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message1,
+      ..Default::default()
+    };
 
     let message2 =
       "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
@@ -78,8 +95,13 @@ mod tests {
     let start2 = Position { line: 1, character: 0 };
     let end2 = Position { line: 1, character: 11 };
     let range2 = Range { start: start2, end: end2 };
-    let diagnostic2 =
-      Diagnostic { range: range2, severity, code: code(19), message: message2, ..Default::default() };
+    let diagnostic2 = Diagnostic {
+      range: range2,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message2,
+      ..Default::default()
+    };
 
     let message3 =
       "Variable `kick_attack` should have a `kebab-case` name (e.g. `kick-attack`), but it's in `snake_case`"
@@ -88,8 +110,13 @@ mod tests {
     let start3 = Position { line: 15, character: 0 };
     let end3 = Position { line: 15, character: 11 };
     let range3 = Range { start: start3, end: end3 };
-    let diagnostic3 =
-      Diagnostic { range: range3, severity, code: code(19), message: message3, ..Default::default() };
+    let diagnostic3 = Diagnostic {
+      range: range3,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message3,
+      ..Default::default()
+    };
 
     let message4 =
       "Variable `kick_decay` should have a `kebab-case` name (e.g. `kick-decay`), but it's in `snake_case`"
@@ -98,8 +125,13 @@ mod tests {
     let start4 = Position { line: 16, character: 0 };
     let end4 = Position { line: 16, character: 10 };
     let range4 = Range { start: start4, end: end4 };
-    let diagnostic4 =
-      Diagnostic { range: range4, severity, code: code(19), message: message4, ..Default::default() };
+    let diagnostic4 = Diagnostic {
+      range: range4,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message4,
+      ..Default::default()
+    };
 
     let message5 =
       "Variable `kick_volume` should have a `kebab-case` name (e.g. `kick-volume`), but it's in `snake_case`"
@@ -108,8 +140,13 @@ mod tests {
     let start5 = Position { line: 18, character: 0 };
     let end5 = Position { line: 18, character: 11 };
     let range5 = Range { start: start5, end: end5 };
-    let diagnostic5 =
-      Diagnostic { range: range5, severity, code: code(19), message: message5, ..Default::default() };
+    let diagnostic5 = Diagnostic {
+      range: range5,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message5,
+      ..Default::default()
+    };
 
     test_errors(
       "./Organic/examples/groovy_bass",
@@ -134,7 +171,8 @@ mod tests {
     let start = Position { line: 0, character: 0 };
     let end = Position { line: 0, character: 11 };
     let range = Range { start, end };
-    let diagnostic = Diagnostic { range, severity, code: code(19), message, ..Default::default() };
+    let diagnostic =
+      Diagnostic { range, severity, code: code(DC::Analyzer_Warning_SnakeCase), message, ..Default::default() };
 
     test_errors("./Organic/examples/siren", vec![diagnostic]).await;
   }
@@ -148,8 +186,13 @@ mod tests {
     let start1 = Position { line: 8, character: 0 };
     let end1 = Position { line: 8, character: 12 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 =
-      Diagnostic { range: range1, severity, code: code(19), message: message1, ..Default::default() };
+    let diagnostic1 = Diagnostic {
+      range: range1,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message1,
+      ..Default::default()
+    };
 
     let message2 =
       "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
@@ -158,8 +201,13 @@ mod tests {
     let start2 = Position { line: 10, character: 0 };
     let end2 = Position { line: 10, character: 11 };
     let range2 = Range { start: start2, end: end2 };
-    let diagnostic2 =
-      Diagnostic { range: range2, severity, code: code(19), message: message2, ..Default::default() };
+    let diagnostic2 = Diagnostic {
+      range: range2,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message2,
+      ..Default::default()
+    };
 
     let message3 =
       "Variable `note_attack` should have a `kebab-case` name (e.g. `note-attack`), but it's in `snake_case`"
@@ -168,8 +216,13 @@ mod tests {
     let start3 = Position { line: 11, character: 0 };
     let end3 = Position { line: 11, character: 11 };
     let range3 = Range { start: start3, end: end3 };
-    let diagnostic3 =
-      Diagnostic { range: range3, severity, code: code(19), message: message3, ..Default::default() };
+    let diagnostic3 = Diagnostic {
+      range: range3,
+      severity,
+      code: code(DC::Analyzer_Warning_SnakeCase),
+      message: message3,
+      ..Default::default()
+    };
 
     test_errors("./Organic/examples/spread_phase", vec![diagnostic1, diagnostic2, diagnostic3]).await;
   }
@@ -201,21 +254,37 @@ mod tests {
     let start1 = Position { line: 0, character: 20 };
     let end1 = Position { line: 0, character: 21 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 =
-      Diagnostic { range: range1, severity, code: code(5), message: eof_message, ..Default::default() };
+    let diagnostic1 = Diagnostic {
+      range: range1,
+      severity,
+      code: code(DC::Parser_Error_UnexpectedEOF),
+      message: eof_message,
+      ..Default::default()
+    };
 
     let message = "Unknown token: '".to_string();
 
     let start2 = Position { line: 0, character: 9 };
     let end2 = Position { line: 0, character: 10 };
     let range2 = Range { start: start2, end: end2 };
-    let diagnostic2 =
-      Diagnostic { range: range2, severity, code: code(1), message: message.clone(), ..Default::default() };
+    let diagnostic2 = Diagnostic {
+      range: range2,
+      severity,
+      code: code(DC::Lexer_Error_UnknownToken),
+      message: message.clone(),
+      ..Default::default()
+    };
 
     let start3 = Position { line: 0, character: 20 };
     let end3 = Position { line: 0, character: 21 };
     let range3 = Range { start: start3, end: end3 };
-    let diagnostic3 = Diagnostic { range: range3, severity, code: code(1), message, ..Default::default() };
+    let diagnostic3 = Diagnostic {
+      range: range3,
+      severity,
+      code: code(DC::Lexer_Error_UnknownToken),
+      message,
+      ..Default::default()
+    };
 
     test_errors("./tests/invalid_lex", vec![diagnostic1, diagnostic2, diagnostic3]).await;
   }
@@ -228,8 +297,13 @@ mod tests {
     let start1 = Position { line: 0, character: 4 };
     let end1 = Position { line: 0, character: 10 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 =
-      Diagnostic { range: range1, severity, code: code(6), message: message.clone(), ..Default::default() };
+    let diagnostic1 = Diagnostic {
+      range: range1,
+      severity,
+      code: code(DC::Parser_Error_WrongToken),
+      message: message.clone(),
+      ..Default::default()
+    };
 
     test_errors("./tests/invalid_parse", vec![diagnostic1]).await;
   }
@@ -242,15 +316,25 @@ mod tests {
     let start1 = Position { line: 2, character: 76 };
     let end1 = Position { line: 2, character: 87 };
     let range1 = Range { start: start1, end: end1 };
-    let diagnostic1 =
-      Diagnostic { range: range1, severity, code: code(13), message: message1, ..Default::default() };
+    let diagnostic1 = Diagnostic {
+      range: range1,
+      severity,
+      code: code(DC::Analyzer_Error_NoSuchVariable),
+      message: message1,
+      ..Default::default()
+    };
 
     let message2 = "Could not match expected type `number` with actual type `???`, regarding value `Identifier(\"length\")`.".to_string();
     let start2 = Position { line: 2, character: 68 };
     let end2 = Position { line: 2, character: 74 };
     let range2 = Range { start: start2, end: end2 };
-    let diagnostic2 =
-      Diagnostic { range: range2, severity, code: code(14), message: message2, ..Default::default() };
+    let diagnostic2 = Diagnostic {
+      range: range2,
+      severity,
+      code: code(DC::Analyzer_Error_TypeMismatch),
+      message: message2,
+      ..Default::default()
+    };
 
     test_errors("./tests/invalid_analysis", vec![diagnostic1, diagnostic2]).await;
   }
@@ -288,7 +372,7 @@ mod tests {
   }
 
   #[allow(clippy::unnecessary_wraps)]
-  fn code(n: i32) -> Option<NumberOrString> {
-    Some(NumberOrString::Number(n))
+  fn code(n: DC) -> Option<NumberOrString> {
+    Some(NumberOrString::Number(n as i32))
   }
 }
