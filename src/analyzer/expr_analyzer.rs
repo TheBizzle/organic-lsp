@@ -77,53 +77,8 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: FuncCall) 
 
       match resolve_type(state, &addr) {
         OT::Function(func) => {
-          state.analysis.usages.entry(addr.clone()).or_default().insert(token.clone());
-          let named_nvts: Vec<_> = actual_tokens
-            .values()
-            .cloned()
-            .map(|token| NonVarToken::NamedArg(token, addr.clone(), func.clone()))
-            .collect();
-          state.analysis.non_var_tokens.extend(named_nvts);
-
-          let mut expecteds: HashMap<_, _> = func
-            .params
-            .clone()
-            .into_iter()
-            .map(|ParamInfo(name, typ, is_optional)| (name, (typ, is_optional)))
-            .collect();
-
-          let mut actuals: HashMap<_, _> = actual_args
-            .into_iter()
-            .map(|ParamInfo(name, typ, is_optional)| (name, (typ, is_optional)))
-            .collect();
-
-          let keys: HashSet<_> = expecteds.keys().cloned().chain(actuals.keys().cloned()).collect();
-
-          for key in keys {
-            match (expecteds.remove(&key), actuals.remove(&key)) {
-              (None, None) => panic!("Invalid state!  Neither \"expected\" nor \"got\" had key \"{key}\"!"),
-              (Some((_, true)), None) => { /* Optional and not supplied */ },
-              (Some((typ, false)), None) => {
-                push_error(state, token.clone(), MissingArgument { name: key, typ });
-              },
-              (None, Some(_)) => {
-                push_error(state, token.clone(), ExtraArgument { name: key });
-              },
-              (Some((expected, _)), Some((got, _))) => {
-                if expected != got {
-                  if let Some(actual_token) = actual_tokens.remove(&key) {
-                    push_error(state, actual_token, TypeMismatch { expected, got });
-                  } else {
-                    panic!("Invalid state!  Tried to look up a token that didn't exist: \"{key}\"")
-                  }
-                }
-              },
-            }
-          }
-
-          Some(func.return_type.clone())
+          crawl_verified_function_call(state, &token, &addr, &mut actual_tokens, actual_args, &func)
         },
-
         expected => {
           let func = Function { params: actual_args, return_type: OT::Unknown };
           let got = OT::Function(Arc::new(func));
@@ -133,6 +88,56 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: FuncCall) 
       }
     },
   }
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn crawl_verified_function_call(
+  state: &mut AnalysisState, token: &Token, addr: &NamedVarAddress,
+  actual_tokens: &mut HashMap<String, Token>, actual_args: Vec<ParamInfo>, func: &Arc<Function>,
+) -> Option<OT> {
+  state.analysis.usages.entry(addr.clone()).or_default().insert(token.clone());
+  let named_nvts: Vec<_> = actual_tokens
+    .values()
+    .cloned()
+    .map(|token| NonVarToken::NamedArg(token, addr.clone(), func.clone()))
+    .collect();
+  state.analysis.non_var_tokens.extend(named_nvts);
+
+  let mut expecteds: HashMap<_, _> = func
+    .params
+    .clone()
+    .into_iter()
+    .map(|ParamInfo(name, typ, is_optional)| (name, (typ, is_optional)))
+    .collect();
+
+  let mut actuals: HashMap<_, _> =
+    actual_args.into_iter().map(|ParamInfo(name, typ, is_optional)| (name, (typ, is_optional))).collect();
+
+  let keys: HashSet<_> = expecteds.keys().cloned().chain(actuals.keys().cloned()).collect();
+
+  for key in keys {
+    match (expecteds.remove(&key), actuals.remove(&key)) {
+      (None, None) => panic!("Invalid state!  Neither \"expected\" nor \"got\" had key \"{key}\"!"),
+      (Some((_, true)), None) => { /* Optional and not supplied */ },
+      (Some((typ, false)), None) => {
+        push_error(state, token.clone(), MissingArgument { name: key, typ });
+      },
+      (None, Some(_)) => {
+        push_error(state, token.clone(), ExtraArgument { name: key });
+      },
+      (Some((expected, _)), Some((got, _))) => {
+        if expected != got {
+          if let Some(actual_token) = actual_tokens.remove(&key) {
+            push_error(state, actual_token, TypeMismatch { expected, got });
+          } else {
+            panic!("Invalid state!  Tried to look up a token that didn't exist: \"{key}\"")
+          }
+        }
+      },
+    }
+  }
+
+  Some(func.return_type.clone())
 }
 
 fn crawl_function_def(state: &mut AnalysisState, func: FuncLiteral) -> Option<OT> {
