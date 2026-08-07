@@ -8,7 +8,7 @@ use crate::core::address::{NamedVarAddress, ScopeAddress};
 use crate::lexer::token::Token;
 
 use crate::analyzer::builtins::{BuiltIns, INITIAL_SCOPE_ADDRESS, initial_state};
-use crate::analyzer::diagnostics::{AnalyzerError, AnalyzerWarning};
+use crate::analyzer::diagnostics::AnalyzerDiagnostic;
 use crate::analyzer::function::Function;
 use crate::analyzer::organic_type::OrganicType;
 use crate::analyzer::scope::{Env, Scope};
@@ -26,12 +26,6 @@ pub struct DefnInfo {
   pub hl_type: HighlightingType,
   pub organic_type: OrganicType,
   pub token: Token,
-}
-
-#[derive(Debug)]
-pub struct Diagnostics {
-  pub errors: Vec<AnalyzerError>,
-  pub warnings: Vec<AnalyzerWarning>,
 }
 
 #[derive(Debug)]
@@ -59,7 +53,7 @@ impl NonVarToken {
 pub struct Analysis {
   pub definitions: HashMap<NamedVarAddress, TermDefn>,
   pub defn_infos: HashMap<NamedVarAddress, DefnInfo>,
-  pub diagnostics: Diagnostics,
+  pub diagnostics: Vec<AnalyzerDiagnostic>,
   pub non_var_tokens: Vec<NonVarToken>,
   pub usages: HashMap<NamedVarAddress, HashSet<Token>>,
 }
@@ -71,7 +65,7 @@ impl Analysis {
     Self {
       definitions,
       defn_infos: HashMap::new(),
-      diagnostics: Diagnostics { errors: Vec::new(), warnings: Vec::new() },
+      diagnostics: Vec::new(),
       non_var_tokens: Vec::new(),
       usages,
     }

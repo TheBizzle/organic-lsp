@@ -3,24 +3,15 @@ use crate::lexer::token::Token;
 use crate::analyzer::organic_type::OrganicType;
 
 #[derive(Debug)]
-pub struct AnalyzerError {
-  pub typ: AnalyzerErrorType,
+pub struct AnalyzerDiagnostic {
+  pub typ: AnalyzerDiagnosticType,
   pub offender: Token,
 }
 
 #[derive(Debug)]
-pub struct AnalyzerWarning {
-  pub typ: AnalyzerWarningType,
-  pub offender: Token,
-}
-
-#[derive(Debug)]
-pub enum AnalyzerWarningType {
-  ArgOverridesPrevious,
-  CamelCase,
-  IntermediateCallInFnDef,
-  SnakeCase,
-  UselessFnBody,
+pub enum AnalyzerDiagnosticType {
+  AnalyzerError(AnalyzerErrorType),
+  AnalyzerWarning(AnalyzerWarningType),
 }
 
 #[derive(Debug)]
@@ -34,4 +25,13 @@ pub enum AnalyzerErrorType {
   NoSuchVariable,
   TypeMismatch { expected: OrganicType, got: OrganicType },
   VarCannotInitInTermsOfSelf,
+}
+
+#[derive(Debug)]
+pub enum AnalyzerWarningType {
+  ArgOverridesPrevious,
+  CamelCase,
+  IntermediateCallInFnDef,
+  SnakeCase,
+  UselessFnBody,
 }

@@ -4,13 +4,13 @@ use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString,
 
 use crate::lexer::diagnostics::LexerError::{self, FileTooBig, UnknownToken};
 use crate::lexer::source_loc::{MiniLoc, SourceLoc};
-use crate::lexer::token::TokenType::Identifier;
+use crate::lexer::token::{Token, TokenType::Identifier};
 
 use crate::parser::diagnostics::ParserError::{
   self, ExtraToken, FictionalToken, MissingParameterValue, UnexpectedEOF, WrongToken,
 };
 
-use crate::analyzer::diagnostics::{AnalyzerError, AnalyzerWarning};
+use crate::analyzer::diagnostics::{AnalyzerErrorType, AnalyzerWarningType};
 
 use crate::analyzer::diagnostics::AnalyzerErrorType::{
   BadInternalState, DuplicateParameter, DuplicateVar, ExtraArgument, MissingArgument, NoSuchFn,
@@ -29,7 +29,7 @@ use crate::lsp::pretty_type::pretty_type;
 pub enum LspError {
   LspLexerError(LexerError),
   LspParserError(ParserError),
-  LspAnalyzerError(AnalyzerError),
+  LspAnalyzerError { typ: AnalyzerErrorType, offender: Token },
 }
 use LspError::{LspAnalyzerError, LspLexerError, LspParserError};
 
@@ -100,36 +100,36 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
       (as_range(&token.source_loc), msg, DC::Parser_Error_WrongToken)
     },
 
-    LspAnalyzerError(AnalyzerError { typ: BadInternalState, offender }) => {
+    LspAnalyzerError { typ: BadInternalState, offender } => {
       let msg = format!("Fatal internal error on `{:?}`", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_BadInternalState)
     },
-    LspAnalyzerError(AnalyzerError { typ: DuplicateParameter, offender }) => {
+    LspAnalyzerError { typ: DuplicateParameter, offender } => {
       let msg = format!("This function already has a parameter named \"{:?}\"", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_DuplicateParameter)
     },
-    LspAnalyzerError(AnalyzerError { typ: DuplicateVar, offender }) => {
+    LspAnalyzerError { typ: DuplicateVar, offender } => {
       let msg = format!("Duplicate variable: {:?}", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_DuplicateVar)
     },
-    LspAnalyzerError(AnalyzerError { typ: ExtraArgument { name }, offender }) => {
+    LspAnalyzerError { typ: ExtraArgument { name }, offender } => {
       let msg = format!("Unexpected argument to function \"{:?}\": {name}", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_ExtraArgument)
     },
-    LspAnalyzerError(AnalyzerError { typ: MissingArgument { name, typ }, offender }) => {
+    LspAnalyzerError { typ: MissingArgument { name, typ }, offender } => {
       let msg =
         format!("Missing argument of type \"{:?}\" to function \"{:?}\": {name}", typ, offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_MissingArgument)
     },
-    LspAnalyzerError(AnalyzerError { typ: NoSuchFn, offender }) => {
+    LspAnalyzerError { typ: NoSuchFn, offender } => {
       let msg = format!("No such function: {:?}", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_NoSuchFn)
     },
-    LspAnalyzerError(AnalyzerError { typ: NoSuchVariable, offender }) => {
+    LspAnalyzerError { typ: NoSuchVariable, offender } => {
       let msg = format!("No such variable: {:?}", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_NoSuchVariable)
     },
-    LspAnalyzerError(AnalyzerError { typ: TypeMismatch { expected, got }, offender }) => {
+    LspAnalyzerError { typ: TypeMismatch { expected, got }, offender } => {
       let msg = format!(
         "Could not match expected type `{}` with actual type `{}`, regarding value `{:?}`.",
         pretty_type(&expected),
@@ -138,7 +138,7 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
       );
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_TypeMismatch)
     },
-    LspAnalyzerError(AnalyzerError { typ: VarCannotInitInTermsOfSelf, offender }) => {
+    LspAnalyzerError { typ: VarCannotInitInTermsOfSelf, offender } => {
       let msg = format!("`{:?}` cannot be defined in terms of itself", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_VarCannotInitInTermsOfSelf)
     },
@@ -154,13 +154,13 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
 }
 
 #[must_use]
-pub fn warning_as_diagnostic(warning: AnalyzerWarning) -> Diagnostic {
+pub fn warning_as_diagnostic(warning: &AnalyzerWarningType, offender: Token) -> Diagnostic {
   let (range, message, diag_code) = match warning {
-    AnalyzerWarning { typ: ArgOverridesPrevious, offender } => {
+    ArgOverridesPrevious => {
       let msg = "This argument overrides a previous one of the same name";
       (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_ArgOverridesPrevious)
     },
-    AnalyzerWarning { typ: CamelCase, offender } => {
+    CamelCase => {
       if let Identifier(name) = offender.token_type {
         let msg = format!(
           "Variable `{name}` should have a `kebab-case` name (e.g. `{}`), but it's in `camelCase`",
@@ -171,11 +171,11 @@ pub fn warning_as_diagnostic(warning: AnalyzerWarning) -> Diagnostic {
         panic!("Impossible snake-cased non-identifer identifier: {offender:?}")
       }
     },
-    AnalyzerWarning { typ: IntermediateCallInFnDef, offender } => {
+    IntermediateCallInFnDef => {
       let msg = "This function call does nothing, since it is not the last statement";
       (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_IntermediateCallInFnDef)
     },
-    AnalyzerWarning { typ: SnakeCase, offender } => {
+    SnakeCase => {
       if let Identifier(name) = offender.token_type {
         let msg = format!(
           "Variable `{name}` should have a `kebab-case` name (e.g. `{}`), but it's in `snake_case`",
@@ -186,7 +186,7 @@ pub fn warning_as_diagnostic(warning: AnalyzerWarning) -> Diagnostic {
         panic!("Impossible snake-cased non-identifer identifier: {offender:?}")
       }
     },
-    AnalyzerWarning { typ: UselessFnBody, offender } => {
+    UselessFnBody => {
       let msg =
         "This entire function body does nothing, since it does not call a function in its final statement";
       (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_UselessFnBody)
