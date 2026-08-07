@@ -1,5 +1,6 @@
 mod backend;
 mod builtins;
+mod code_action;
 mod common;
 mod definition;
 mod diagnostics;
@@ -28,6 +29,7 @@ use tower_lsp_server::{ClientSocket, LanguageServer, LspService};
 use crate::core::doc_loc::DocLoc;
 
 use crate::lsp::backend::LspBackend;
+use crate::lsp::code_action::{actions_in_diagnostics, actions_in_selection, actions_under_cursor};
 use crate::lsp::common::token_to_location;
 use crate::lsp::definition::describe_defn;
 use crate::lsp::document::{Entity, LValueInfo};
@@ -83,8 +85,30 @@ impl LanguageServer for LspBackend {
     Ok(())
   }
 
-  async fn code_action(&self, _params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
-    Ok(Some(vec![])) // TODO (e.g. quick-fixes like declaring undeclared variables)
+  async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+    let doc_loc = DocLoc::new(params.text_document.uri.to_string());
+    if let Some(doc) = self.documents.read().await.get(&doc_loc) {
+      let uri = params.text_document.uri;
+      let range = params.range;
+      let diagnostics = params.context.diagnostics;
+
+      let res1 = actions_under_cursor(&uri, range);
+      let res2 = actions_in_selection(&uri, range);
+      let res3 = actions_in_diagnostics(&uri, doc, diagnostics);
+
+      let results: Vec<_> = res1.into_iter().chain(res2).chain(res3).flatten().collect();
+
+      let result_opt = match results.as_slice() {
+        [] => None,
+        _ => Some(results),
+      };
+
+      Ok(result_opt)
+    } else {
+      let msg = format!("No known document for URI: {doc_loc:?}");
+      self.client.log_message(DEBUG, msg).await;
+      Ok(None)
+    }
   }
 
   async fn completion(&self, _params: CompletionParams) -> Result<Option<CompletionResponse>> {
