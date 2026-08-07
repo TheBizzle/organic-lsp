@@ -17,7 +17,9 @@ pub struct AnalyzerWarning {
 #[derive(Debug)]
 pub enum AnalyzerWarningType {
   ArgOverridesPrevious,
+  CamelCase,
   IntermediateCallInFnDef,
+  SnakeCase,
   UselessFnBody,
 }
 

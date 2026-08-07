@@ -4,6 +4,7 @@ use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString,
 
 use crate::lexer::diagnostics::LexerError::{self, FileTooBig, UnknownToken};
 use crate::lexer::source_loc::{MiniLoc, SourceLoc};
+use crate::lexer::token::TokenType::Identifier;
 
 use crate::parser::diagnostics::ParserError::{
   self, ExtraToken, FictionalToken, MissingParameterValue, UnexpectedEOF, WrongToken,
@@ -17,9 +18,10 @@ use crate::analyzer::diagnostics::AnalyzerErrorType::{
 };
 
 use crate::analyzer::diagnostics::AnalyzerWarningType::{
-  ArgOverridesPrevious, IntermediateCallInFnDef, UselessFnBody,
+  ArgOverridesPrevious, CamelCase, IntermediateCallInFnDef, SnakeCase, UselessFnBody,
 };
 
+use crate::lsp::kebab_cased::kebab_cased;
 use crate::lsp::pretty_type::pretty_type;
 
 #[derive(Debug)]
@@ -52,7 +54,9 @@ pub(super) enum DiagnosticCode {
   Analyzer_Error_TypeMismatch,
   Analyzer_Error_VarCannotInitInTermsOfSelf,
   Analyzer_Warning_ArgOverridesPrevious,
+  Analyzer_Warning_CamelCase,
   Analyzer_Warning_IntermediateCallInFnDef,
+  Analyzer_Warning_SnakeCase,
   Analyzer_Warning_UselessFnBody,
 }
 use DiagnosticCode as DC;
@@ -156,9 +160,31 @@ pub fn warning_as_diagnostic(warning: AnalyzerWarning) -> Diagnostic {
       let msg = "This argument overrides a previous one of the same name";
       (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_ArgOverridesPrevious)
     },
+    AnalyzerWarning { typ: CamelCase, offender } => {
+      if let Identifier(name) = offender.token_type {
+        let msg = format!(
+          "Variable `{name}` should have a `kebab-case` name (e.g. `{}`), but it's in `camelCase`",
+          kebab_cased(&name)
+        );
+        (as_range(&offender.source_loc), msg, DC::Analyzer_Warning_CamelCase)
+      } else {
+        panic!("Impossible snake-cased non-identifer identifier: {offender:?}")
+      }
+    },
     AnalyzerWarning { typ: IntermediateCallInFnDef, offender } => {
       let msg = "This function call does nothing, since it is not the last statement";
       (as_range(&offender.source_loc), msg.to_string(), DC::Analyzer_Warning_IntermediateCallInFnDef)
+    },
+    AnalyzerWarning { typ: SnakeCase, offender } => {
+      if let Identifier(name) = offender.token_type {
+        let msg = format!(
+          "Variable `{name}` should have a `kebab-case` name (e.g. `{}`), but it's in `snake_case`",
+          kebab_cased(&name)
+        );
+        (as_range(&offender.source_loc), msg, DC::Analyzer_Warning_SnakeCase)
+      } else {
+        panic!("Impossible snake-cased non-identifer identifier: {offender:?}")
+      }
     },
     AnalyzerWarning { typ: UselessFnBody, offender } => {
       let msg =

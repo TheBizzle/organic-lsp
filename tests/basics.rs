@@ -16,17 +16,106 @@ mod tests {
 
   #[tokio::test]
   async fn can_open_cascade() {
-    test_no_problem("./Organic/examples/cascade").await;
+    let severity = Some(DiagnosticSeverity::WARNING);
+
+    let message1 =
+      "Variable `note_attack` should have a `kebab-case` name (e.g. `note-attack`), but it's in `snake_case`"
+        .to_string();
+
+    let start1 = Position { line: 0, character: 0 };
+    let end1 = Position { line: 0, character: 11 };
+    let range1 = Range { start: start1, end: end1 };
+    let diagnostic1 =
+      Diagnostic { range: range1, severity, code: code(19), message: message1, ..Default::default() };
+
+    let message2 =
+      "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
+        .to_string();
+
+    let start2 = Position { line: 1, character: 0 };
+    let end2 = Position { line: 1, character: 11 };
+    let range2 = Range { start: start2, end: end2 };
+    let diagnostic2 =
+      Diagnostic { range: range2, severity, code: code(19), message: message2, ..Default::default() };
+
+    test_errors("./Organic/examples/cascade", vec![diagnostic1, diagnostic2]).await;
   }
 
   #[tokio::test]
   async fn can_open_chord_swell() {
-    test_no_problem("./Organic/examples/chord_swell").await;
+    let severity = Some(DiagnosticSeverity::WARNING);
+
+    let message =
+      "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
+        .to_string();
+
+    let start = Position { line: 0, character: 0 };
+    let end = Position { line: 0, character: 11 };
+    let range = Range { start, end };
+    let diagnostic = Diagnostic { range, severity, code: code(19), message, ..Default::default() };
+
+    test_errors("./Organic/examples/chord_swell", vec![diagnostic]).await;
   }
 
   #[tokio::test]
   async fn can_open_groovy_bass() {
-    test_no_problem("./Organic/examples/groovy_bass").await;
+    let severity = Some(DiagnosticSeverity::WARNING);
+
+    let message1 =
+      "Variable `note_attack` should have a `kebab-case` name (e.g. `note-attack`), but it's in `snake_case`"
+        .to_string();
+
+    let start1 = Position { line: 0, character: 0 };
+    let end1 = Position { line: 0, character: 11 };
+    let range1 = Range { start: start1, end: end1 };
+    let diagnostic1 =
+      Diagnostic { range: range1, severity, code: code(19), message: message1, ..Default::default() };
+
+    let message2 =
+      "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
+        .to_string();
+
+    let start2 = Position { line: 1, character: 0 };
+    let end2 = Position { line: 1, character: 11 };
+    let range2 = Range { start: start2, end: end2 };
+    let diagnostic2 =
+      Diagnostic { range: range2, severity, code: code(19), message: message2, ..Default::default() };
+
+    let message3 =
+      "Variable `kick_attack` should have a `kebab-case` name (e.g. `kick-attack`), but it's in `snake_case`"
+        .to_string();
+
+    let start3 = Position { line: 15, character: 0 };
+    let end3 = Position { line: 15, character: 11 };
+    let range3 = Range { start: start3, end: end3 };
+    let diagnostic3 =
+      Diagnostic { range: range3, severity, code: code(19), message: message3, ..Default::default() };
+
+    let message4 =
+      "Variable `kick_decay` should have a `kebab-case` name (e.g. `kick-decay`), but it's in `snake_case`"
+        .to_string();
+
+    let start4 = Position { line: 16, character: 0 };
+    let end4 = Position { line: 16, character: 10 };
+    let range4 = Range { start: start4, end: end4 };
+    let diagnostic4 =
+      Diagnostic { range: range4, severity, code: code(19), message: message4, ..Default::default() };
+
+    let message5 =
+      "Variable `kick_volume` should have a `kebab-case` name (e.g. `kick-volume`), but it's in `snake_case`"
+        .to_string();
+
+    let start5 = Position { line: 18, character: 0 };
+    let end5 = Position { line: 18, character: 11 };
+    let range5 = Range { start: start5, end: end5 };
+    let diagnostic5 =
+      Diagnostic { range: range5, severity, code: code(19), message: message5, ..Default::default() };
+
+    test_errors(
+      "./Organic/examples/groovy_bass",
+      vec![diagnostic1, diagnostic2, diagnostic3, diagnostic4, diagnostic5],
+    )
+    .await;
   }
 
   #[tokio::test]
@@ -36,12 +125,53 @@ mod tests {
 
   #[tokio::test]
   async fn can_open_siren() {
-    test_no_problem("./Organic/examples/siren").await;
+    let severity = Some(DiagnosticSeverity::WARNING);
+
+    let message =
+      "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
+        .to_string();
+
+    let start = Position { line: 0, character: 0 };
+    let end = Position { line: 0, character: 11 };
+    let range = Range { start, end };
+    let diagnostic = Diagnostic { range, severity, code: code(19), message, ..Default::default() };
+
+    test_errors("./Organic/examples/siren", vec![diagnostic]).await;
   }
 
   #[tokio::test]
   async fn can_open_spread_phase() {
-    test_no_problem("./Organic/examples/spread_phase").await;
+    let severity = Some(DiagnosticSeverity::WARNING);
+
+    let message1 = "Variable `phase_length` should have a `kebab-case` name (e.g. `phase-length`), but it's in `snake_case`".to_string();
+
+    let start1 = Position { line: 8, character: 0 };
+    let end1 = Position { line: 8, character: 12 };
+    let range1 = Range { start: start1, end: end1 };
+    let diagnostic1 =
+      Diagnostic { range: range1, severity, code: code(19), message: message1, ..Default::default() };
+
+    let message2 =
+      "Variable `note_length` should have a `kebab-case` name (e.g. `note-length`), but it's in `snake_case`"
+        .to_string();
+
+    let start2 = Position { line: 10, character: 0 };
+    let end2 = Position { line: 10, character: 11 };
+    let range2 = Range { start: start2, end: end2 };
+    let diagnostic2 =
+      Diagnostic { range: range2, severity, code: code(19), message: message2, ..Default::default() };
+
+    let message3 =
+      "Variable `note_attack` should have a `kebab-case` name (e.g. `note-attack`), but it's in `snake_case`"
+        .to_string();
+
+    let start3 = Position { line: 11, character: 0 };
+    let end3 = Position { line: 11, character: 11 };
+    let range3 = Range { start: start3, end: end3 };
+    let diagnostic3 =
+      Diagnostic { range: range3, severity, code: code(19), message: message3, ..Default::default() };
+
+    test_errors("./Organic/examples/spread_phase", vec![diagnostic1, diagnostic2, diagnostic3]).await;
   }
 
   #[tokio::test]

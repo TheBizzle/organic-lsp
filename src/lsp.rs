@@ -5,6 +5,7 @@ mod definition;
 mod diagnostics;
 mod document;
 mod full_analysis;
+mod kebab_cased;
 mod named_arg;
 mod pretty_type;
 mod semantic_tokens;

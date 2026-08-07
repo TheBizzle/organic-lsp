@@ -5,8 +5,9 @@ use crate::core::address::NamedVarAddress;
 use crate::parser::ast::{Include, Module, Statement, VarDecl};
 
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT};
-use crate::analyzer::common::{push_error, resolve_addr};
+use crate::analyzer::common::{push_error, push_warning, resolve_addr};
 use crate::analyzer::diagnostics::AnalyzerErrorType::DuplicateVar;
+use crate::analyzer::diagnostics::AnalyzerWarningType::{CamelCase, SnakeCase};
 use crate::analyzer::expr_analyzer::{crawl_expr, crawl_function_call};
 use crate::analyzer::organic_type::OrganicType as OT;
 use crate::analyzer::value::TermDefn::UserDefined;
@@ -33,6 +34,13 @@ pub(super) fn crawl_statement(state: &mut AnalysisState, statement: Statement) {
 fn crawl_var_decl(state: &mut AnalysisState, var_decl: VarDecl) {
   let my_addr =
     NamedVarAddress { name: var_decl.name.name.clone(), scope_addr: state.last_scope_addr.clone() };
+
+  let name = var_decl.name.name.clone();
+  if name.chars().skip(1).take(name.chars().count().saturating_sub(2)).any(|c| c == '_') {
+    push_warning(state, var_decl.name.token.clone(), SnakeCase);
+  } else if name.chars().any(char::is_uppercase) {
+    push_warning(state, var_decl.name.token.clone(), CamelCase);
+  }
 
   if resolve_addr(state, var_decl.name.name.as_str()).is_some() {
     push_error(state, var_decl.name.token.clone(), DuplicateVar);
