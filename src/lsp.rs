@@ -93,7 +93,7 @@ impl LanguageServer for LspBackend {
       let range = params.range;
       let diagnostics = params.context.diagnostics;
 
-      let res1 = actions_under_cursor(&uri, range);
+      let res1 = actions_under_cursor(&uri, doc, range);
       let res2 = actions_in_selection(&uri, range);
       let res3 = actions_in_diagnostics(&uri, doc, diagnostics);
 
