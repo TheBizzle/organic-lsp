@@ -94,7 +94,7 @@ impl LanguageServer for LspBackend {
       let diagnostics = params.context.diagnostics;
 
       let res1 = actions_under_cursor(&uri, doc, range);
-      let res2 = actions_in_selection(&uri, range);
+      let res2 = actions_in_selection(&uri, doc, range);
       let res3 = actions_in_diagnostics(&uri, doc, diagnostics);
 
       let results: Vec<_> = res1.into_iter().chain(res2).chain(res3).flatten().collect();

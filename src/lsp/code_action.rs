@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use tower_lsp_server::ls_types::{
-  CodeAction, CodeActionKind, CodeActionOrCommand as CAoCo, CodeActionResponse, Diagnostic, NumberOrString,
-  Position, Range, TextEdit, Uri, WorkspaceEdit,
+  CodeAction, CodeActionDisabled, CodeActionKind, CodeActionOrCommand as CAoCo, CodeActionResponse,
+  Diagnostic, NumberOrString, Position, Range, TextEdit, Uri, WorkspaceEdit,
 };
 
 use crate::lexer::token::{Token, TokenType::Identifier};
@@ -69,11 +69,69 @@ pub(super) fn actions_under_cursor(uri: &Uri, doc: &Document, range: Range) -> O
   }
 }
 
-pub(super) fn actions_in_selection(_uri: &Uri, range: Range) -> Option<CodeActionResponse> {
-  if range.start == range.end {
-    None
+#[allow(clippy::unnecessary_wraps)]
+pub(super) fn actions_in_selection(uri: &Uri, doc: &Document, range: Range) -> Option<CodeActionResponse> {
+  let base_extractor = CodeAction {
+    title: "Extract to new variable".to_string(),
+    kind: Some(CodeActionKind::REFACTOR_EXTRACT),
+    diagnostics: None,
+    edit: None,
+    command: None,
+    is_preferred: Some(false),
+    disabled: None,
+    data: None,
+  };
+
+  let start_line = range.start.line as usize;
+  let start_column = range.start.character;
+  let end_line = range.end.line as usize;
+  let end_column = range.end.character - 1;
+
+  if range.start != range.end
+    && let Some(start_token) = doc.tokens[start_line].get(&start_column)
+    && let Some(end_token) = doc.tokens[end_line].get(&end_column)
+  {
+    let start_index = start_token.source_loc.pos as usize;
+    let end_index = (end_token.source_loc.pos + end_token.source_loc.length) as usize;
+    let snipped = doc.contents[start_index..end_index].to_string();
+
+    let new_var_line = TextEdit {
+      new_text: format!("rename-me = {snipped}\n"),
+      range: Range {
+        start: Position { line: start_token.source_loc.line - 1, character: 0 },
+        end: Position { line: start_token.source_loc.line - 1, character: 0 },
+      },
+    };
+
+    let replacement = TextEdit {
+      new_text: "rename-me".to_string(),
+      range: Range {
+        start: Position {
+          line: start_token.source_loc.line - 1,
+          character: start_token.source_loc.column - 1,
+        },
+        end: Position {
+          line: end_token.source_loc.line - 1,
+          character: end_token.source_loc.column + end_token.source_loc.length - 1,
+        },
+      },
+    };
+
+    let edit = Some(WorkspaceEdit {
+      changes: Some(HashMap::from([(uri.clone(), vec![new_var_line, replacement])])),
+      ..Default::default()
+    });
+
+    let action = CodeAction { edit, ..base_extractor };
+
+    Some(vec![CAoCo::CodeAction(action)])
   } else {
-    Some(Vec::new()) // TODO: Extract variable ::REFACTOR_EXTRACT
+    let action = CodeAction {
+      disabled: Some(CodeActionDisabled { reason: "A selection is required".to_string() }),
+      ..base_extractor
+    };
+
+    Some(vec![CAoCo::CodeAction(action)])
   }
 }
 
