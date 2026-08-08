@@ -31,18 +31,19 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
   let doc_loc = DocLoc::new(uri.to_string());
 
   let (
+    token_stream,
     Analysis { definitions, mut defn_infos, diagnostics: analyzer_diagnostics, non_var_tokens, usages },
     pre_errors,
   ) = {
     let (tokens, lerrors) = lex(&doc_loc, &text);
     let lsp_lerrors: Vec<_> = lerrors.into_iter().map(LspLexerError).collect();
 
-    match parse(tokens) {
-      Ok(module) => (analyze(module), lsp_lerrors),
+    match parse(tokens.clone()) {
+      Ok(module) => (tokens, analyze(module), lsp_lerrors),
       Err(error) => {
         let lsp_all_errors = vec![LspParserError(error)].into_iter().chain(lsp_lerrors).collect();
         let dummy_module = Module { includes: Vec::new(), statements: Vec::new() };
-        (analyze(dummy_module), lsp_all_errors)
+        (tokens, analyze(dummy_module), lsp_all_errors)
       },
     }
   };
@@ -79,21 +80,29 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     })
     .collect();
 
-  let (mut entities, infos) = definits
-    .iter()
-    .map(|(source_loc, _, _)| source_loc.line)
-    .chain(non_var_tokens.iter().map(NonVarToken::line))
-    .max()
-    .map_or_else(
-      || (Vec::<RangeMap<u32, Entity>>::new(), HashMap::<NamedVarAddress, Arc<LValueInfo>>::new()),
+  let (mut entities, tokens, infos) =
+    token_stream.iter().map(|token| token.source_loc.line).max().map_or_else(
+      || {
+        (
+          Vec::<RangeMap<u32, Entity>>::new(),
+          Vec::<RangeMap<u32, Token>>::new(),
+          HashMap::<NamedVarAddress, Arc<LValueInfo>>::new(),
+        )
+      },
       |max| {
         let mut addrs = vec![RangeMap::new(); max as usize];
         let mut lv_infos = HashMap::new();
         for (loc, addr, info_arc) in definits {
-          insert_entity(&mut addrs, &loc, Entity::LValue { addr: addr.clone() });
+          insert_in_range(&mut addrs, &loc, Entity::LValue { addr: addr.clone() });
           lv_infos.insert(addr, info_arc); // Kind of clumsy and redundant
         }
-        (addrs, lv_infos)
+
+        let mut toks = vec![RangeMap::new(); max as usize];
+        for token in token_stream {
+          insert_in_range(&mut toks, &token.source_loc.clone(), token);
+        }
+
+        (addrs, toks, lv_infos)
       },
     );
 
@@ -112,13 +121,13 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
       NonVarToken::String(_, value) => Entity::StringLiteral(value),
     };
 
-    insert_entity(&mut entities, source_loc, entity_type);
+    insert_in_range(&mut entities, source_loc, entity_type);
   }
 
-  let doc = Document { contents: text.clone(), diagnostics, entities, infos };
+  let doc = Document { contents: text.clone(), diagnostics, entities, infos, tokens };
   this.documents.write().await.insert(doc_loc.clone(), doc);
 }
 
-fn insert_entity(entities: &mut [RangeMap<u32, Entity>], loc: &SourceLoc, entity: Entity) {
-  entities.get_mut((loc.line - 1) as usize).unwrap().insert(source_loc_to_range(loc), entity);
+fn insert_in_range<T: Clone + PartialEq>(ranges: &mut [RangeMap<u32, T>], loc: &SourceLoc, t: T) {
+  ranges.get_mut((loc.line - 1) as usize).unwrap().insert(source_loc_to_range(loc), t);
 }
