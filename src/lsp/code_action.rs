@@ -45,7 +45,8 @@ pub(super) fn actions_in_diagnostics(
         || diag_code == DiagnosticCode::Analyzer_Lint_SnakeCase)
       && let Some(LValue { addr }) = doc.entities[line].get(&column)
       && let Some(info_arc) = doc.infos.get(addr)
-      && let UserDefined { token: Token { token_type: Identifier(name), .. } } = &info_arc.as_ref().definition
+      && let UserDefined { token: Token { token_type, .. }, .. } = &info_arc.as_ref().definition
+      && let Identifier(name) = token_type
     {
       let kebabed = kebab_cased(name);
 

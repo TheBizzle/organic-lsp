@@ -10,15 +10,62 @@ pub struct Symbol {
 
 #[derive(Debug, PartialEq)]
 pub enum Expr {
-  Call { call: FuncCall, token: Token },
-  Function { value: FuncLiteral, token: Token },
-  Grouping { value: Box<Self>, token: Token },
-  List { values: Vec<Self>, token: Token },
-  LValue { name: Symbol, token: Token },
-  Negated { value: Box<Self>, token: Token },
-  Number { value: NotNan<f64>, token: Token },
-  Op { left: Box<Self>, operator: Operator, right: Box<Self>, token: Token },
-  String { value: String, token: Token },
+  Call {
+    call: FuncCall,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
+  Function {
+    value: FuncLiteral,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
+  Grouping {
+    value: Box<Self>,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
+  List {
+    values: Vec<Self>,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
+  LValue {
+    name: Symbol,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
+  Negated {
+    value: Box<Self>,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
+  Number {
+    value: NotNan<f64>,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
+  Op {
+    left: Box<Self>,
+    operator: Operator,
+    right: Box<Self>,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
+  String {
+    value: String,
+    token: Token,
+    start: Token,
+    end: Token,
+  },
 }
 
 #[derive(Debug, PartialEq)]
@@ -94,6 +141,36 @@ impl Expr {
       | Self::Number { token, .. }
       | Self::Op { token, .. }
       | Self::String { token, .. } => token.clone(),
+    }
+  }
+
+  #[must_use]
+  pub fn get_start(&self) -> Token {
+    match self {
+      Self::Call { start, .. }
+      | Self::Function { start, .. }
+      | Self::Grouping { start, .. }
+      | Self::List { start, .. }
+      | Self::LValue { start, .. }
+      | Self::Negated { start, .. }
+      | Self::Number { start, .. }
+      | Self::Op { start, .. }
+      | Self::String { start, .. } => start.clone(),
+    }
+  }
+
+  #[must_use]
+  pub fn get_end(&self) -> Token {
+    match self {
+      Self::Call { end, .. }
+      | Self::Function { end, .. }
+      | Self::Grouping { end, .. }
+      | Self::List { end, .. }
+      | Self::LValue { end, .. }
+      | Self::Negated { end, .. }
+      | Self::Number { end, .. }
+      | Self::Op { end, .. }
+      | Self::String { end, .. } => end.clone(),
     }
   }
 }

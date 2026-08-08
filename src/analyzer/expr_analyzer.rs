@@ -31,14 +31,14 @@ pub(super) fn crawl_expr(state: &mut AnalysisState, expr: Expr) -> Option<OT> {
     Expr::Function { value, .. } => crawl_function_def(state, value),
     Expr::Grouping { value, .. } => crawl_expr(state, *value),
     Expr::List { values, .. } => crawl_list(state, values),
-    Expr::LValue { name, token } => crawl_lvalue(state, &name, token),
-    Expr::Negated { value, token } => crawl_negated(state, *value, token),
-    Expr::Number { value, token } => {
+    Expr::LValue { name, token, .. } => crawl_lvalue(state, &name, token),
+    Expr::Negated { value, token, .. } => crawl_negated(state, *value, token),
+    Expr::Number { value, token, .. } => {
       state.analysis.non_var_tokens.push(NonVarToken::Number(token, value));
       Some(OT::Number)
     },
     Expr::Op { left, operator, right, .. } => Some(crawl_op(state, *left, &operator, *right)),
-    Expr::String { value, token } => {
+    Expr::String { value, token, .. } => {
       state.analysis.non_var_tokens.push(NonVarToken::String(token, value));
       Some(OT::String)
     },
@@ -168,7 +168,7 @@ fn consume_generic_binding(bindings: &mut HashMap<String, OT>, typ: &OT) -> Opti
 fn crawl_function_def(state: &mut AnalysisState, func: FuncLiteral) -> Option<OT> {
   let FuncLiteral { formals, body, .. } = func;
 
-  let param_pairs = {
+  let param_quartets = {
     let mut known_names = HashSet::new();
 
     formals
@@ -179,20 +179,22 @@ fn crawl_function_def(state: &mut AnalysisState, func: FuncLiteral) -> Option<OT
         } else {
           known_names.insert(name.name.clone());
         }
+        let start = default.get_start();
+        let end = default.get_end();
         let typ = crawl_expr(state, default)?;
-        Some((name.token, ParamInfo(name.name, typ, true)))
+        Some((name.token, start, end, ParamInfo(name.name, typ, true)))
       })
       .collect::<Option<Vec<_>>>()?
   };
 
-  let return_type = crawl_fn_body(state, body, &param_pairs);
-  let params = param_pairs.into_iter().map(|(_, param)| param).collect();
+  let return_type = crawl_fn_body(state, body, &param_quartets);
+  let params = param_quartets.into_iter().map(|(_, _, _, param)| param).collect();
 
   Some(OT::Function(Arc::new(Function { params, return_type })))
 }
 
 fn crawl_fn_body(
-  state: &mut AnalysisState, mut body: Vec<Statement>, params: &Vec<(Token, ParamInfo)>,
+  state: &mut AnalysisState, mut body: Vec<Statement>, params: &Vec<(Token, Token, Token, ParamInfo)>,
 ) -> OT {
   if let Some(last) = body.pop() {
     let statements = body;
@@ -214,12 +216,14 @@ fn crawl_fn_body(
     let env = {
       let mut bindings = HashMap::new();
 
-      for (token, ParamInfo(name, typ, _)) in params {
+      for (token, start, end, ParamInfo(name, typ, _)) in params {
         let my_addr = NamedVarAddress { name: name.clone(), scope_addr: address.clone() };
         let defn_info = DefnInfo { hl_type: HLT::Parameter, organic_type: typ.clone(), token: token.clone() };
-
-        state.analysis.definitions.insert(my_addr.clone(), UserDefined { token: token.clone() });
         state.analysis.defn_infos.insert(my_addr.clone(), defn_info);
+
+        let defn = UserDefined { token: token.clone(), start: start.clone(), end: end.clone() };
+        state.analysis.definitions.insert(my_addr.clone(), defn);
+
         state.analysis.usages.insert(my_addr.clone(), HashSet::from([token.clone()]));
         state.vars.insert(my_addr.clone(), typ.clone());
         bindings.insert(name.clone(), my_addr);

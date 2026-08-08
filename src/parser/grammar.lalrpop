@@ -43,18 +43,22 @@ pub Module: Module = {
 }
 
 pub Statement: Statement = {
-  <fn_call: FuncCall>                    => Statement::FunctionCall(Box::new(fn_call)),
+  <fn_call: FuncCallTriplet>             => Statement::FunctionCall(Box::new(fn_call.0)),
   <ident: "identifier"> "=" <expr: Expr> => Statement::VariableDecl(VarDecl { name: as_symbol(&ident, "var name"), init: expr }),
-  <ident: "identifier"> "(" <params: Params> ")" "=" "{" <body: Statement*> "}" =>? {
+  <ident: "identifier"> "(" <params: Params> ")" "=" "{" <body: Statement*> <closer: "}"> =>? {
     let symbol = as_symbol(&ident, "function name");
-    Ok(Statement::VariableDecl(
-      VarDecl { name: symbol.clone()
-              , init: Expr::Function {
-                        value: FuncLiteral { name: symbol, formals: as_formals(params)?, body }
-                      , token: ident
-                      }
-              }
-    ))
+    Ok(
+      Statement::VariableDecl(
+        VarDecl { name: symbol.clone()
+                , init: Expr::Function {
+                          value: FuncLiteral { name: symbol, formals: as_formals(params)?, body }
+                        , start: ident.clone()
+                        , end: closer
+                        , token: ident
+                        }
+                }
+      )
+    )
   }
 };
 
@@ -71,46 +75,46 @@ Expr: Expr = {
 };
 
 Equality: Expr = {
-  <lhs: Comparison> <token: "=="> <rhs: Equality> => Expr::Op { left: Box::new(lhs), operator: Op::Equals, right: Box::new(rhs), token },
+  <lhs: Comparison> <token: "=="> <rhs: Equality> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::Equals, right: Box::new(rhs), token },
   Comparison,
 };
 
 Comparison: Expr = {
-  <lhs: AddSub> <token: ">="> <rhs: AddSub> => Expr::Op { left: Box::new(lhs), operator: Op::GreaterOrEquals, right: Box::new(rhs), token },
-  <lhs: AddSub> <token:  ">"> <rhs: AddSub> => Expr::Op { left: Box::new(lhs), operator: Op::GreaterThan    , right: Box::new(rhs), token },
-  <lhs: AddSub> <token: "<="> <rhs: AddSub> => Expr::Op { left: Box::new(lhs), operator: Op::LessOrEquals   , right: Box::new(rhs), token },
-  <lhs: AddSub> <token:  "<"> <rhs: AddSub> => Expr::Op { left: Box::new(lhs), operator: Op::LessThan       , right: Box::new(rhs), token },
+  <lhs: AddSub> <token: ">="> <rhs: AddSub> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::GreaterOrEquals, right: Box::new(rhs), token },
+  <lhs: AddSub> <token:  ">"> <rhs: AddSub> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::GreaterThan    , right: Box::new(rhs), token },
+  <lhs: AddSub> <token: "<="> <rhs: AddSub> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::LessOrEquals   , right: Box::new(rhs), token },
+  <lhs: AddSub> <token:  "<"> <rhs: AddSub> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::LessThan       , right: Box::new(rhs), token },
   AddSub,
 };
 
 AddSub: Expr = {
-  <lhs: AddSub> <token: "+"> <rhs: MulDiv> => Expr::Op { left: Box::new(lhs), operator: Op::Plus , right: Box::new(rhs), token },
-  <lhs: AddSub> <token: "-"> <rhs: MulDiv> => Expr::Op { left: Box::new(lhs), operator: Op::Minus, right: Box::new(rhs), token },
+  <lhs: AddSub> <token: "+"> <rhs: MulDiv> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::Plus , right: Box::new(rhs), token },
+  <lhs: AddSub> <token: "-"> <rhs: MulDiv> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::Minus, right: Box::new(rhs), token },
   MulDiv,
 };
 
 MulDiv: Expr = {
-  <lhs: MulDiv> <token: "*"> <rhs: Unary> => Expr::Op { left: Box::new(lhs), operator: Op::Times , right: Box::new(rhs), token },
-  <lhs: MulDiv> <token: "/"> <rhs: Unary> => Expr::Op { left: Box::new(lhs), operator: Op::Divide, right: Box::new(rhs), token },
+  <lhs: MulDiv> <token: "*"> <rhs: Unary> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::Times , right: Box::new(rhs), token },
+  <lhs: MulDiv> <token: "/"> <rhs: Unary> => Expr::Op { start: lhs.get_start(), end: rhs.get_end(), left: Box::new(lhs), operator: Op::Divide, right: Box::new(rhs), token },
   Unary,
 };
 
 Unary: Expr = {
-  <token: "-"> <expr: Unary> => Expr::Negated { value: Box::new(expr), token },
+  <token: "-"> <expr: Unary> => Expr::Negated { start: token.clone(), end: expr.get_end(), value: Box::new(expr), token },
   FnCall,
 };
 
 FnCall: Expr = {
-  <call: FuncCall> => {
+  <(call, start, end): FuncCallTriplet> => {
     let token = call.func.token.clone();
-    Expr::Call { call, token }
+    Expr::Call { call, token, start, end }
   },
   Primary,
 };
 
-FuncCall: FuncCall = {
-  <ident: "identifier"> "(" <params: Params> ")" =>?
-    Ok(FuncCall { func: as_symbol(&ident, "function name"), args: as_args(params)? }),
+FuncCallTriplet: (FuncCall, Token, Token) = {
+  <ident: "identifier"> "(" <params: Params> <closer: ")"> =>?
+    Ok((FuncCall { func: as_symbol(&ident, "function name"), args: as_args(params)? }, ident, closer)),
 }
 
 Params: Vec<Param> = {
@@ -124,21 +128,21 @@ Param: Param = {
 }
 
 Primary: Expr = {
-  <token: "["> <values: ExprSeq> "]" => Expr::List { values, token },
+  <token: "["> <values: ExprSeq> <closer: "]"> => Expr::List { values, start: token.clone(), end: closer, token },
 
-  <token: "("> <expr: Expr> ")" => Expr::Grouping { value: Box::new(expr), token },
+  <token: "("> <expr: Expr> <closer: ")"> => Expr::Grouping { value: Box::new(expr), start: token.clone(), end: closer, token },
 
-  <token: "identifier"> => Expr::LValue { name: as_symbol(&token, "identifier"), token },
+  <token: "identifier"> => Expr::LValue { name: as_symbol(&token, "identifier"), start: token.clone(), end: token.clone(), token },
 
   <token: "number"> =>
     match token.token_type {
-      TokenType::Number(value) => Expr::Number { value, token },
+      TokenType::Number(value) => Expr::Number { value, start: token.clone(), end: token.clone(), token },
       x                        => panic!("Impossible number: {x:?}")
     },
 
   <token: "string"> =>
     match &token.token_type {
-      TokenType::String(value) => Expr::String { value: value.to_string(), token },
+      TokenType::String(value) => Expr::String { value: value.to_string(), start: token.clone(), end: token.clone(), token },
       x                        => panic!("Impossible string: {x:?}")
     },
 };

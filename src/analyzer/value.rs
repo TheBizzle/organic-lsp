@@ -60,10 +60,11 @@ pub enum PitchClass {
   G,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum TermDefn {
   BuiltinConstant { value: ConstantValue },
   BuiltinFn { value: Function },
   BuiltinNote { note: Note },
-  UserDefined { token: Token },
+  UserDefined { token: Token, start: Token, end: Token },
 }

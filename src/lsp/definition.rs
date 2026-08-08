@@ -29,7 +29,7 @@ pub(super) fn describe_defn(defn: &TermDefn, ot_opt: Option<OT>, token_opt: Opti
       let hertz_3_decimals = (hertz * 1000.0).round() / 1000.0;
       format!("Built-in note `{}` (`{}` Hz)", describe_note(note), hertz_3_decimals)
     },
-    TermDefn::UserDefined { token } => format!(
+    TermDefn::UserDefined { token, .. } => format!(
       "User-defined value
 ```scala
 {}: {}

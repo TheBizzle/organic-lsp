@@ -45,7 +45,12 @@ fn crawl_var_decl(state: &mut AnalysisState, var_decl: VarDecl) {
   if resolve_addr(state, var_decl.name.name.as_str()).is_some() {
     push_error(state, var_decl.name.token.clone(), DuplicateVar);
   } else {
-    state.analysis.definitions.insert(my_addr.clone(), UserDefined { token: var_decl.name.token.clone() });
+    let defn = UserDefined {
+      token: var_decl.name.token.clone(),
+      start: var_decl.init.get_start(),
+      end: var_decl.init.get_end(),
+    };
+    state.analysis.definitions.insert(my_addr.clone(), defn);
     state.analysis.usages.insert(my_addr.clone(), HashSet::from([var_decl.name.token.clone()]));
   }
 
