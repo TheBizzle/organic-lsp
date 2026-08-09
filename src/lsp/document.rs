@@ -11,6 +11,8 @@ use crate::core::address::NamedVarAddress;
 
 use crate::lexer::token::Token;
 
+use crate::parser::ast::Module;
+
 use crate::analyzer::analysis::DefnInfo;
 use crate::analyzer::function::Function;
 use crate::analyzer::value::TermDefn;
@@ -33,6 +35,7 @@ pub enum Entity {
 
 #[derive(Debug)]
 pub struct Document {
+  pub ast: Module,
   pub contents: String,
   pub diagnostics: Vec<Diagnostic>,
   pub entities: Vec<RangeMap<u32, Entity>>,

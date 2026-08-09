@@ -34,6 +34,7 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
 
   let (
     token_stream,
+    ast,
     Analysis { definitions, mut defn_infos, diagnostics: analyzer_diagnostics, non_var_tokens, usages },
     pre_errors,
   ) = {
@@ -41,11 +42,15 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     let lsp_lerrors: Vec<_> = lerrors.into_iter().map(LspLexerError).collect();
 
     match parse(tokens.clone()) {
-      Ok(module) => (tokens, analyze(&module), lsp_lerrors),
+      Ok(module) => {
+        let analysis = analyze(&module);
+        (tokens, module, analysis, lsp_lerrors)
+      },
       Err(error) => {
         let lsp_all_errors = vec![LspParserError(error)].into_iter().chain(lsp_lerrors).collect();
         let dummy_module = Module { includes: Vec::new(), statements: Vec::new() };
-        (tokens, analyze(&dummy_module), lsp_all_errors)
+        let analysis = analyze(&dummy_module);
+        (tokens, dummy_module, analysis, lsp_all_errors)
       },
     }
   };
@@ -147,7 +152,7 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     base_var_names
   };
 
-  let doc = Document { contents: text.clone(), diagnostics, entities, infos, last_var_names, tokens };
+  let doc = Document { ast, contents: text.clone(), diagnostics, entities, infos, last_var_names, tokens };
   this.documents.write().await.insert(doc_loc.clone(), doc);
 }
 

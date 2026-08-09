@@ -87,11 +87,13 @@ pub enum Operator {
   GreaterOrEquals,
 }
 
+#[derive(Debug)]
 pub struct Module {
   pub includes: Vec<Include>,
   pub statements: Vec<Statement>,
 }
 
+#[derive(Debug)]
 pub struct Include {
   pub path: String,
 }
