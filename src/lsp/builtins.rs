@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 
 #[allow(dead_code)]
-pub struct BuiltIn {
-  name: &'static str,
-  description: &'static str,
-  parameters: HashMap<&'static str, &'static str>,
+pub(super) struct BuiltIn {
+  pub(super) name: &'static str,
+  pub(super) description: &'static str,
+  pub(super) parameters: HashMap<&'static str, &'static str>,
 }
 
 #[must_use]
@@ -14,7 +14,7 @@ pub(super) fn lookup_builtin_arg(func_name: &str, param_name: &str) -> Option<&'
 }
 
 // TODO: FILL_INs
-static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new(|| {
+pub(super) static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new(|| {
   vec![
     ("absolute", "FILL_IN", HashMap::from([("value", "FILL_IN")])),
     ("all", "FILL_IN", HashMap::from([("values", "FILL_IN")])),

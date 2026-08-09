@@ -15,8 +15,8 @@ use ConstantValue as CV;
 use OrganicType as OT;
 
 pub(super) struct Constant {
-  name: &'static str,
-  value: ConstantValue,
+  pub(super) name: &'static str,
+  pub(super) value: ConstantValue,
 }
 
 pub(super) struct StdLibFn {
@@ -424,7 +424,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 32]> = LazyLock::new(|| {
   ]
 });
 
-static CONSTANTS: &[Constant] = &[
+pub(super) static CONSTANTS: &[Constant] = &[
   Constant { name: "backward", value: CV::SequenceArg },
   Constant { name: "down", value: CV::RoundArg },
   Constant { name: "e", value: CV::Number(consts::E) },
@@ -441,7 +441,7 @@ static CONSTANTS: &[Constant] = &[
 ];
 
 // e.g. `as5` is an A# on the 5th octave
-static NOTES: LazyLock<HashMap<String, Note>> = LazyLock::new(|| {
+pub(super) static NOTES: LazyLock<HashMap<String, Note>> = LazyLock::new(|| {
   PitchClass::iter()
     .flat_map(|pitch_class| Accidental::iter().map(move |accidental| (pitch_class.clone(), accidental)))
     .flat_map(|(pitch, acci)| {

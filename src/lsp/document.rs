@@ -37,5 +37,6 @@ pub struct Document {
   pub diagnostics: Vec<Diagnostic>,
   pub entities: Vec<RangeMap<u32, Entity>>,
   pub infos: HashMap<NamedVarAddress, Arc<LValueInfo>>,
+  pub last_var_names: HashSet<String>,
   pub tokens: Vec<RangeMap<u32, Token>>,
 }

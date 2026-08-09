@@ -4,6 +4,7 @@ mod backend;
 mod builtins;
 mod code_action;
 mod common;
+mod completion;
 mod definition;
 mod document;
 mod full_analysis;
@@ -32,6 +33,7 @@ use crate::core::doc_loc::DocLoc;
 use crate::lsp::backend::LspBackend;
 use crate::lsp::code_action::{actions_in_diagnostics, actions_in_selection, actions_under_cursor};
 use crate::lsp::common::token_to_location;
+use crate::lsp::completion::completion;
 use crate::lsp::definition::describe_defn;
 use crate::lsp::document::{Entity, LValueInfo};
 use crate::lsp::full_analysis::store_and_reanalyze;
@@ -112,8 +114,8 @@ impl LanguageServer for LspBackend {
     }
   }
 
-  async fn completion(&self, _params: CompletionParams) -> Result<Option<CompletionResponse>> {
-    Ok(None) // TODO
+  async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+    Ok(completion(self, params).await)
   }
 
   async fn did_open(&self, params: DidOpenTextDocumentParams) {

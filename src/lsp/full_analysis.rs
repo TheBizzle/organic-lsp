@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use rangemap::RangeMap;
@@ -19,6 +19,7 @@ use crate::analyzer::analysis::{Analysis, NonVarToken};
 use crate::analyzer::analyze;
 use crate::analyzer::diagnostics::AnalyzerDiagnostic;
 use crate::analyzer::diagnostics::AnalyzerDiagnosticType::{AnalyzerError, AnalyzerLint, AnalyzerWarning};
+use crate::analyzer::value::TermDefn::UserDefined;
 
 use crate::lsp::backend::LspBackend;
 use crate::lsp::common::source_loc_to_range;
@@ -27,6 +28,7 @@ use crate::lsp::document::{Document, Entity, LValueInfo};
 
 use LspError::{LspAnalyzerError, LspLexerError, LspParserError};
 
+#[allow(clippy::too_many_lines)]
 pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: String) {
   let doc_loc = DocLoc::new(uri.to_string());
 
@@ -124,7 +126,28 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     insert_in_range(&mut entities, source_loc, entity_type);
   }
 
-  let doc = Document { contents: text.clone(), diagnostics, entities, infos, tokens };
+  let base_var_names: HashSet<_> = infos
+    .values()
+    .filter_map(|info| {
+      if let UserDefined { token, .. } = &info.definition
+        && let Token { token_type: Identifier(var_name), .. } = token
+      {
+        Some(var_name.clone())
+      } else {
+        None
+      }
+    })
+    .collect();
+
+  let last_var_names = if base_var_names.is_empty()
+    && let Some(doc) = this.documents.read().await.get(&doc_loc)
+  {
+    doc.last_var_names.clone()
+  } else {
+    base_var_names
+  };
+
+  let doc = Document { contents: text.clone(), diagnostics, entities, infos, last_var_names, tokens };
   this.documents.write().await.insert(doc_loc.clone(), doc);
 }
 
