@@ -19,7 +19,7 @@ use builtins::{CONSTANTS, NOTES};
 use organic_type::OrganicType;
 
 #[must_use]
-pub(super) fn analyze(module: Module) -> Analysis {
+pub(super) fn analyze(module: &Module) -> Analysis {
   let mut state = AnalysisState::default();
   module_analyzer::run(&mut state, module);
   state.analysis

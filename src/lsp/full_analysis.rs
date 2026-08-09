@@ -41,11 +41,11 @@ pub(super) async fn store_and_reanalyze(this: &LspBackend, uri: Uri, text: Strin
     let lsp_lerrors: Vec<_> = lerrors.into_iter().map(LspLexerError).collect();
 
     match parse(tokens.clone()) {
-      Ok(module) => (tokens, analyze(module), lsp_lerrors),
+      Ok(module) => (tokens, analyze(&module), lsp_lerrors),
       Err(error) => {
         let lsp_all_errors = vec![LspParserError(error)].into_iter().chain(lsp_lerrors).collect();
         let dummy_module = Module { includes: Vec::new(), statements: Vec::new() };
-        (tokens, analyze(dummy_module), lsp_all_errors)
+        (tokens, analyze(&dummy_module), lsp_all_errors)
       },
     }
   };

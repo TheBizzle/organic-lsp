@@ -20,44 +20,44 @@ use Operator::{Divide, Equals, GreaterOrEquals, GreaterThan, LessOrEquals, LessT
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT, NonVarToken};
 use crate::analyzer::common::{push_error, push_warning, resolve_addr, resolve_type};
 use crate::analyzer::function::{Function, ParamInfo};
-use crate::analyzer::module_analyzer::crawl_statement;
+use crate::analyzer::module_analyzer::crawl_var_decl;
 use crate::analyzer::organic_type::OrganicType as OT;
 use crate::analyzer::scope::{Env, Scope};
 use crate::analyzer::value::TermDefn::UserDefined;
 
-pub(super) fn crawl_expr(state: &mut AnalysisState, expr: Expr) -> Option<OT> {
+pub(super) fn crawl_expr(state: &mut AnalysisState, expr: &Expr) -> Option<OT> {
   match expr {
     Expr::Call { call, .. } => crawl_function_call(state, call),
     Expr::Function { value, .. } => crawl_function_def(state, value),
-    Expr::Grouping { value, .. } => crawl_expr(state, *value),
+    Expr::Grouping { value, .. } => crawl_expr(state, value.as_ref()),
     Expr::List { values, .. } => crawl_list(state, values),
-    Expr::LValue { name, token, .. } => crawl_lvalue(state, &name, token),
-    Expr::Negated { value, token, .. } => crawl_negated(state, *value, token),
+    Expr::LValue { name, token, .. } => crawl_lvalue(state, name, token.clone()),
+    Expr::Negated { value, token, .. } => crawl_negated(state, value.as_ref(), token.clone()),
     Expr::Number { value, token, .. } => {
-      state.analysis.non_var_tokens.push(NonVarToken::Number(token, value));
+      state.analysis.non_var_tokens.push(NonVarToken::Number(token.clone(), *value));
       Some(OT::Number)
     },
-    Expr::Op { left, operator, right, .. } => Some(crawl_op(state, *left, &operator, *right)),
+    Expr::Op { left, operator, right, .. } => Some(crawl_op(state, left.as_ref(), operator, right.as_ref())),
     Expr::String { value, token, .. } => {
-      state.analysis.non_var_tokens.push(NonVarToken::String(token, value));
+      state.analysis.non_var_tokens.push(NonVarToken::String(token.clone(), value.clone()));
       Some(OT::String)
     },
   }
 }
 
-pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: FuncCall) -> Option<OT> {
+pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall) -> Option<OT> {
   let FuncCall { func: Symbol { name, token }, args } = fn_call;
 
-  match resolve_addr(state, &name) {
+  match resolve_addr(state, name) {
     None => {
-      push_error(state, token, NoSuchFn);
+      push_error(state, token.clone(), NoSuchFn);
       None
     },
 
     Some(addr) => {
       {
         let mut seen_names = HashSet::<String>::new();
-        for arg in &args {
+        for arg in args {
           if seen_names.contains(&arg.name.name) {
             push_warning(state, arg.name.token.clone(), ArgOverridesPrevious);
           } else {
@@ -67,22 +67,22 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: FuncCall) 
       }
 
       let (mut actual_tokens, actual_args): (HashMap<_, _>, Vec<_>) = args
-        .into_iter()
+        .iter()
         .map(|Arg { name, value }| {
           let mapping = (name.name.clone(), name.token.clone());
-          let pram = ParamInfo(name.name, crawl_expr(state, value).unwrap_or(OT::Unknown), false);
+          let pram = ParamInfo(name.name.clone(), crawl_expr(state, value).unwrap_or(OT::Unknown), false);
           (mapping, pram)
         })
         .collect();
 
       match resolve_type(state, &addr) {
         OT::Function(func) => {
-          crawl_verified_function_call(state, &token, &addr, &mut actual_tokens, actual_args, &func)
+          crawl_verified_function_call(state, token, &addr, &mut actual_tokens, actual_args, &func)
         },
         expected => {
           let func = Function { params: actual_args, return_type: OT::Unknown };
           let got = OT::Function(Arc::new(func));
-          push_error(state, token, TypeMismatch { expected, got });
+          push_error(state, token.clone(), TypeMismatch { expected, got });
           None
         },
       }
@@ -165,14 +165,14 @@ fn consume_generic_binding(bindings: &mut HashMap<String, OT>, typ: &OT) -> Opti
   }
 }
 
-fn crawl_function_def(state: &mut AnalysisState, func: FuncLiteral) -> Option<OT> {
+fn crawl_function_def(state: &mut AnalysisState, func: &FuncLiteral) -> Option<OT> {
   let FuncLiteral { formals, body, .. } = func;
 
   let param_quartets = {
     let mut known_names = HashSet::new();
 
     formals
-      .into_iter()
+      .iter()
       .map(|Formal { name, default }| {
         if known_names.contains(&name.name) {
           push_error(state, name.token.clone(), DuplicateParameter);
@@ -182,33 +182,34 @@ fn crawl_function_def(state: &mut AnalysisState, func: FuncLiteral) -> Option<OT
         let start = default.get_start();
         let end = default.get_end();
         let typ = crawl_expr(state, default)?;
-        Some((name.token, start, end, ParamInfo(name.name, typ, true)))
+        Some((name.token.clone(), start, end, ParamInfo(name.name.clone(), typ, true)))
       })
       .collect::<Option<Vec<_>>>()?
   };
 
-  let return_type = crawl_fn_body(state, body, &param_quartets);
+  let mut bod: Vec<_> = body.iter().collect();
+  let return_type = crawl_fn_body(state, &mut bod, &param_quartets);
   let params = param_quartets.into_iter().map(|(_, _, _, param)| param).collect();
 
   Some(OT::Function(Arc::new(Function { params, return_type })))
 }
 
 fn crawl_fn_body(
-  state: &mut AnalysisState, mut body: Vec<Statement>, params: &Vec<(Token, Token, Token, ParamInfo)>,
+  state: &mut AnalysisState, body: &mut Vec<&Statement>, params: &Vec<(Token, Token, Token, ParamInfo)>,
 ) -> OT {
   if let Some(last) = body.pop() {
     let statements = body;
-    let (decls, fn_calls): (Vec<_>, Vec<_>) =
-      statements.into_iter().fold((Vec::new(), Vec::new()), |(mut ds, mut fcs), stmt| {
+    let (decls, call_tokens): (Vec<_>, Vec<_>) =
+      statements.iter().fold((Vec::new(), Vec::new()), |(mut ds, mut cts), stmt| {
         match stmt {
-          Statement::FunctionCall(fn_call) => fcs.push(*fn_call),
+          Statement::FunctionCall(fn_call) => cts.push(fn_call.func.token.clone()),
           Statement::VariableDecl(decl) => ds.push(decl),
         }
-        (ds, fcs)
+        (ds, cts)
       });
 
-    for fn_call in fn_calls {
-      push_warning(state, fn_call.func.token.clone(), IntermediateCallInFnDef);
+    for call_token in call_tokens {
+      push_warning(state, call_token, IntermediateCallInFnDef);
     }
 
     let address = ScopeAddress { n: state.last_scope_addr.n + 1 };
@@ -237,14 +238,14 @@ fn crawl_fn_body(
     state.last_scope_addr = address;
 
     for decl in decls {
-      crawl_statement(state, Statement::VariableDecl(decl));
+      crawl_var_decl(state, decl);
     }
 
     let out = match last {
-      Statement::FunctionCall(fn_call) => crawl_function_call(state, *fn_call).unwrap_or(OT::Unknown),
+      Statement::FunctionCall(fn_call) => crawl_function_call(state, fn_call.as_ref()).unwrap_or(OT::Unknown),
       Statement::VariableDecl(decl) => {
         push_warning(state, decl.name.token.clone(), UselessFnBody);
-        crawl_statement(state, Statement::VariableDecl(decl));
+        crawl_var_decl(state, decl);
         OT::Unknown
       },
     };
@@ -258,8 +259,8 @@ fn crawl_fn_body(
   }
 }
 
-fn crawl_list(state: &mut AnalysisState, values: Vec<Expr>) -> Option<OT> {
-  let mut types = values.into_iter().map(|value| crawl_expr(state, value)).collect::<Option<Vec<_>>>()?;
+fn crawl_list(state: &mut AnalysisState, values: &[Expr]) -> Option<OT> {
+  let mut types = values.iter().map(|value| crawl_expr(state, value)).collect::<Option<Vec<_>>>()?;
   if types.is_empty() {
     Some(OT::List(Box::new(OT::Unknown)))
   } else {
@@ -291,7 +292,7 @@ fn crawl_lvalue(state: &mut AnalysisState, name: &Symbol, token: Token) -> Optio
   }
 }
 
-fn crawl_negated(state: &mut AnalysisState, expr: Expr, token: Token) -> Option<OT> {
+fn crawl_negated(state: &mut AnalysisState, expr: &Expr, token: Token) -> Option<OT> {
   let typ = crawl_expr(state, expr)?;
   if typ == OT::Number {
     Some(typ)
@@ -302,7 +303,7 @@ fn crawl_negated(state: &mut AnalysisState, expr: Expr, token: Token) -> Option<
 }
 
 #[rustfmt::skip]
-fn crawl_op(state: &mut AnalysisState, left: Expr, op: &Operator, right: Expr) -> OT {
+fn crawl_op(state: &mut AnalysisState, left: &Expr, op: &Operator, right: &Expr) -> OT {
   let left_token = left.get_token();
   let right_token = right.get_token();
 
