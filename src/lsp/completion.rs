@@ -20,13 +20,17 @@ pub(super) async fn completion(this: &LspBackend, params: CompletionParams) -> O
   let line = position.line as usize;
   let column = position.character;
 
-  if let Some(doc) = this.documents.read().await.get(&doc_loc)
-    && column > 0
-    && let Some(token) = doc.tokens[line].get(&(column - 1))
-    && let Token { token_type: Identifier(wip), .. } = token
-  {
+  this.documents.read().await.get(&doc_loc).map(|doc| {
+    let prefix = if let Some(token) = doc.tokens[line].get(&(column - 1))
+      && let Token { token_type: Identifier(wip), .. } = token
+    {
+      wip
+    } else {
+      ""
+    };
+
     let user_vars = doc.last_var_names.iter().filter_map(|var_name| {
-      if var_name.starts_with(wip) {
+      if var_name.starts_with(prefix) {
         Some(CompletionItem {
           label: var_name.clone(),
           kind: Some(CompletionItemKind::VARIABLE),
@@ -41,7 +45,7 @@ pub(super) async fn completion(this: &LspBackend, params: CompletionParams) -> O
     let note_names = note_names();
 
     let notes = note_names.iter().filter_map(|note| {
-      if note.starts_with(wip) {
+      if note.starts_with(prefix) {
         Some(CompletionItem {
           label: note.clone(),
           kind: Some(CompletionItemKind::CONSTANT),
@@ -56,7 +60,7 @@ pub(super) async fn completion(this: &LspBackend, params: CompletionParams) -> O
     let constants = constants();
 
     let consts = constants.keys().filter_map(|const_name| {
-      if const_name.starts_with(wip) {
+      if const_name.starts_with(prefix) {
         Some(CompletionItem {
           label: const_name.clone(),
           kind: Some(CompletionItemKind::CONSTANT),
@@ -71,7 +75,7 @@ pub(super) async fn completion(this: &LspBackend, params: CompletionParams) -> O
     let mut known_params = HashSet::new();
 
     let funcs_and_fields = DOCS.values().flat_map(|builtin| {
-      let func_opt = if builtin.name.starts_with(wip) {
+      let func_opt = if builtin.name.starts_with(prefix) {
         Some(CompletionItem {
           label: builtin.name.to_string(),
           kind: Some(CompletionItemKind::FUNCTION),
@@ -83,7 +87,7 @@ pub(super) async fn completion(this: &LspBackend, params: CompletionParams) -> O
       };
 
       let params = builtin.parameters.iter().filter_map(|(param_name, desc)| {
-        if param_name.starts_with(wip) && !known_params.contains(param_name) {
+        if param_name.starts_with(prefix) && !known_params.contains(param_name) {
           known_params.insert(param_name);
           Some(CompletionItem {
             label: param_name.to_string(),
@@ -101,8 +105,6 @@ pub(super) async fn completion(this: &LspBackend, params: CompletionParams) -> O
 
     let items = user_vars.chain(notes).chain(consts).chain(funcs_and_fields).collect();
 
-    Some(CompletionResponse::Array(items))
-  } else {
-    None
-  }
+    CompletionResponse::Array(items)
+  })
 }
