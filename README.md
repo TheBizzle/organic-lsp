@@ -9,7 +9,7 @@ A language server for [the Organic programming language](https://github.com/ERSU
 
 ### Neovim
 
-Build the project with `cargo run --release`.  Then, add the following to your Neovim config (with the path filled in):
+Build the project with `cargo build --release`.  Then, add the following to your Neovim config (with the path filled in):
 
 ```lua
 vim.filetype.add({
@@ -29,7 +29,7 @@ vim.lsp.enable("organic-lsp")
 
 #### Debugging
 
-To run a single instance of the server for debugging, make sure that you have the `socat` command line utility installed, launch the server with `cargo run --release`, and change the Neovim `config` section to:
+To run a single instance of the server for debugging, make sure that you have the `socat` command line utility installed, launch the server with `cargo run debug --release`, and change the Neovim `config` section to:
 
 ```lua
 vim.lsp.config("organic-lsp", {
@@ -80,7 +80,4 @@ See the extension [here](https://github.com/TheBizzle/organic-lsp-vscode).
       * With context/scope/type awareness
     * Formatting of code selection
     * Whole-document formatting (while preserving whitespace and comments)
-
-  * Other
-    * Support more than one client at a time
 
