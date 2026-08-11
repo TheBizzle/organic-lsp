@@ -43,3 +43,25 @@ vim.lsp.config("organic-lsp", {
 
 See the extension [here](https://github.com/TheBizzle/organic-lsp-vscode).
 
+## What can it do?
+
+  * Semantic code highlighting
+  * Typechecking for nearly all of the Organic programming language
+    * The only significant language feature currently missing is `include`
+  * Additional information displayed on hover
+  * Linting
+    * Of identifiers that aren't kebab-cased
+  * Navigation
+    * Find all usages of a term
+    * Jump to definition of term
+  * Quick-fixes for
+    * Non-kebab-cased names
+  * Code-processing actions
+    * Rename variables
+    * Inline variable definitions
+    * Extract the selection into a new variable
+  * Code completion of
+    * Built-in constants, note names, functions
+    * Named parameters to built-in functions
+    * User-defined variables
+
