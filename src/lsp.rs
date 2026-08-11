@@ -133,8 +133,36 @@ impl LanguageServer for LspBackend {
     }
   }
 
-  async fn formatting(&self, _params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
-    Ok(Some(vec![])) // TODO
+  async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
+    fn formatter_run(str: &str) -> String {
+      str.to_string()
+    }
+
+    let uri = DocLoc::new(params.text_document.uri.to_string());
+
+    let res_opt = self.documents.read().await.get(&uri).and_then(|doc| {
+      let text = &doc.contents;
+      let new_text = formatter_run(text);
+
+      if &new_text == text {
+        None
+      } else {
+        let num_lines = u32::try_from(text.lines().count()).expect("Document can't have that many lines");
+        let num_columns = u32::try_from(text.lines().count()).expect("Last line can't have that many chars");
+
+        let edit = TextEdit {
+          range: TowerRange {
+            start: Position { line: 0, character: 0 },
+            end: Position { line: num_lines, character: num_columns },
+          },
+          new_text,
+        };
+
+        Some(vec![edit])
+      }
+    });
+
+    Ok(res_opt)
   }
 
   async fn goto_definition(&self, params: GotoDefinitionParams) -> Result<Option<GotoDefinitionResponse>> {
