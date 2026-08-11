@@ -74,7 +74,6 @@ See the extension [here](https://github.com/TheBizzle/organic-lsp-vscode).
     * Incremental (procedure-level) updates of the LSP state
     * Fuller hover documentation (in place of things that currently say `FILL_IN`)
     * Better code completion
-      * Disabled in strings and comments
       * Sorted by priority
       * With context/scope/type awareness
     * Formatting of code selection
