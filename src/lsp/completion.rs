@@ -13,11 +13,6 @@ use tower_lsp_server::ls_types::{
   CompletionItem, CompletionItemKind, CompletionParams, CompletionResponse, TextDocumentPositionParams,
 };
 
-// TODO: Allow immediately after whitespace
-// TODO: Turn off in strings and comments
-// TODO: Give sorting priority
-// TODO: Have context/scope/type awareness
-
 pub(super) async fn completion(this: &LspBackend, params: CompletionParams) -> Option<CompletionResponse> {
   let TextDocumentPositionParams { text_document, position } = params.text_document_position;
   let doc_loc = DocLoc::new(text_document.uri.to_string());

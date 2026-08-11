@@ -52,7 +52,6 @@ impl LanguageServer for LspBackend {
   async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
     Ok(InitializeResult {
       capabilities: ServerCapabilities {
-        // TODO: TextDocumentSyncKind::INCREMENTAL
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
 
         hover_provider: Some(HoverProviderCapability::Simple(true)),

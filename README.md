@@ -65,3 +65,22 @@ See the extension [here](https://github.com/TheBizzle/organic-lsp-vscode).
     * Named parameters to built-in functions
     * User-defined variables
 
+## What additional things might it be able to do in the future?
+
+  * Language features
+    * Import foreign terms through `include`
+
+  * LSP features
+    * Incremental (procedure-level) updates of the LSP state
+    * Fuller hover documentation (in place of things that currently say `FILL_IN`)
+    * Better code completion
+      * Allowed immediately after whitespace
+      * Disabled in strings and comments
+      * Sorted by priority
+      * With context/scope/type awareness
+    * Formatting of code selection
+    * Whole-document formatting (while preserving whitespace and comments)
+
+  * Other
+    * Support more than one client at a time
+

@@ -13,7 +13,6 @@ pub(super) fn lookup_builtin_arg(func_name: &str, param_name: &str) -> Option<&'
   DOCS.get(func_name)?.parameters.get(param_name).copied()
 }
 
-// TODO: FILL_INs
 pub(super) static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new(|| {
   vec![
     ("absolute", "FILL_IN", HashMap::from([("value", "FILL_IN")])),

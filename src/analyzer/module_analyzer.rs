@@ -19,7 +19,6 @@ pub(super) fn run(state: &mut AnalysisState, module: &Module) {
 
 const fn crawl_include(_state: &mut AnalysisState, include: &Include) {
   let Include { path: _ } = include;
-  // TODO: Import foreign terms into namespace
 }
 
 pub(super) fn crawl_statement(state: &mut AnalysisState, statement: &Statement) {
