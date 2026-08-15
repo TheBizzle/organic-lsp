@@ -1,4 +1,6 @@
 pub mod diagnostics;
+pub mod document;
+pub mod miniformat;
 
 mod backend;
 mod builtins;
@@ -6,10 +8,8 @@ mod code_action;
 mod common;
 mod completion;
 mod definition;
-mod document;
 mod full_analysis;
 mod kebab_cased;
-mod miniformat;
 mod named_arg;
 mod pretty_type;
 mod semantic_tokens;

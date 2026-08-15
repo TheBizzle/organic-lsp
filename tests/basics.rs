@@ -14,6 +14,7 @@ mod tests {
   use organic_lsp::core::doc_loc::DocLoc;
   use organic_lsp::lsp::diagnostics::DiagnosticCode as DC;
   use organic_lsp::lsp::document::Document;
+  use organic_lsp::lsp::miniformat::miniformat;
   use organic_lsp::lsp::new_lsp;
 
   #[tokio::test]
@@ -338,6 +339,51 @@ mod tests {
     };
 
     test_errors("./tests/invalid_analysis", vec![diagnostic1, diagnostic2]).await;
+  }
+
+  #[tokio::test]
+  async fn can_open_formatted() {
+    test_no_problem("./tests/formatted_harmonics").await;
+  }
+
+  #[tokio::test]
+  async fn can_format_formatted_idempotent() {
+    let file_path = "./tests/formatted_harmonics";
+    let path = PathBuf::from(format!("{file_path}.organic"));
+    let original = read_to_string(&path).await.unwrap();
+    let original_no_eof_nl = &original[..original.len() - 1];
+
+    open(file_path, |document| {
+      let result = miniformat(&document.ast, 110);
+      assert_eq!(result, original_no_eof_nl);
+    })
+    .await;
+  }
+
+  #[tokio::test]
+  async fn can_open_unformatted() {
+    test_no_problem("./tests/unformatted_harmonics").await;
+  }
+
+  #[tokio::test]
+  async fn can_format_unformatted_changes() {
+    let formatted_reference_text = {
+      let original = read_to_string(&PathBuf::from("./tests/formatted_harmonics.organic")).await.unwrap();
+      original[..original.len() - 1].to_string()
+    };
+
+    let file_path = "./tests/unformatted_harmonics";
+    let unformatted_reference_text = {
+      let original = read_to_string(&PathBuf::from(format!("{file_path}.organic"))).await.unwrap();
+      original[..original.len() - 1].to_string()
+    };
+
+    open(file_path, |document| {
+      let result = miniformat(&document.ast, 110);
+      assert_ne!(result, unformatted_reference_text);
+      assert_eq!(result, formatted_reference_text);
+    })
+    .await;
   }
 
   async fn test_no_problem(path: &str) {

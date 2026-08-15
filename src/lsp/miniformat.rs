@@ -6,7 +6,8 @@ use crate::parser::ast::{
   Arg, Expr, Formal, FuncCall, FuncLiteral, Include, Module, Operator, Symbol, VarDecl,
 };
 
-pub(super) fn miniformat(ast: &Module, avail_width: u32) -> String {
+#[must_use]
+pub fn miniformat(ast: &Module, avail_width: u32) -> String {
   let Module { includes, statements } = ast;
 
   let mut output = String::new();
