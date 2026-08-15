@@ -21,14 +21,16 @@ use tower_lsp_server::ls_types::{
   CompletionResponse, DidChangeTextDocumentParams, DidOpenTextDocumentParams, DocumentFormattingParams,
   GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents, HoverParams, HoverProviderCapability,
   InitializeParams, InitializeResult, InitializedParams, Location, MarkedString, MessageType, OneOf,
-  Position, Range as TowerRange, ReferenceParams, RenameParams, SemanticTokensFullOptions,
-  SemanticTokensLegend, SemanticTokensOptions, SemanticTokensParams, SemanticTokensResult,
-  SemanticTokensServerCapabilities, ServerCapabilities, TextDocumentPositionParams,
+  Position, PrepareRenameResponse, Range as TowerRange, ReferenceParams, RenameOptions, RenameParams,
+  SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions, SemanticTokensParams,
+  SemanticTokensResult, SemanticTokensServerCapabilities, ServerCapabilities, TextDocumentPositionParams,
   TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Uri, WorkDoneProgressOptions, WorkspaceEdit,
 };
 use tower_lsp_server::{ClientSocket, LanguageServer, LspService};
 
 use crate::core::doc_loc::DocLoc;
+
+use crate::lexer::token::{Token, TokenType::Identifier};
 
 use crate::lsp::backend::LspBackend;
 use crate::lsp::code_action::{actions_in_diagnostics, actions_in_selection, actions_under_cursor};
@@ -68,7 +70,10 @@ impl LanguageServer for LspBackend {
         completion_provider: Some(CompletionOptions::default()),
         definition_provider: Some(OneOf::Left(true)),
         references_provider: Some(OneOf::Left(true)),
-        rename_provider: Some(OneOf::Left(true)),
+        rename_provider: Some(OneOf::Right(RenameOptions {
+          prepare_provider: Some(true),
+          work_done_progress_options: WorkDoneProgressOptions::default(),
+        })),
         code_action_provider: Some(CodeActionProviderCapability::Simple(true)),
         document_formatting_provider: Some(OneOf::Left(true)),
 
@@ -226,6 +231,22 @@ impl LanguageServer for LspBackend {
     {
       let locs = info_arc.as_ref().usages.iter().map(token_to_location).collect();
       Ok(Some(locs))
+    } else {
+      Ok(None)
+    }
+  }
+
+  async fn prepare_rename(
+    &self, params: TextDocumentPositionParams,
+  ) -> Result<Option<PrepareRenameResponse>> {
+    let doc_loc = DocLoc::new(params.text_document.uri.to_string());
+    if let Some(doc) = self.documents.write().await.get(&doc_loc)
+      && let Some(line) = doc.tokens.get(params.position.line as usize)
+      && let Some(token) = line.get(&params.position.character)
+      && let Token { token_type: Identifier(name), .. } = token
+    {
+      let Location { range, .. } = token_to_location(token);
+      Ok(Some(PrepareRenameResponse::RangeWithPlaceholder { range, placeholder: name.clone() }))
     } else {
       Ok(None)
     }
