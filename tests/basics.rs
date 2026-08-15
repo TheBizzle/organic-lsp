@@ -13,6 +13,7 @@ mod tests {
 
   use organic_lsp::core::doc_loc::DocLoc;
   use organic_lsp::lsp::diagnostics::DiagnosticCode as DC;
+  use organic_lsp::lsp::document::Document;
   use organic_lsp::lsp::new_lsp;
 
   #[tokio::test]
@@ -340,17 +341,18 @@ mod tests {
   }
 
   async fn test_no_problem(path: &str) {
-    let diagnostics = open(path).await;
+    let diagnostics = open_and_diagnose(path).await;
     assert!(diagnostics.is_empty(), "Expected {path} to have no errors, got: {diagnostics:?}");
   }
 
   async fn test_errors(path: &str, expected: Vec<Diagnostic>) {
-    let actual = open(path).await;
+    let actual = open_and_diagnose(path).await;
     assert_eq!(actual, expected);
   }
 
-  async fn open(path: &str) -> Vec<Diagnostic> {
-    let path = PathBuf::from(format!("{path}.organic"));
+  #[allow(clippy::significant_drop_tightening)]
+  async fn open<T, F: Fn(&Document) -> T>(file_path: &str, callback: F) -> T {
+    let path = PathBuf::from(format!("{file_path}.organic"));
     let text = read_to_string(&path).await.unwrap();
 
     let mini_uri = format!("file://{}", path.display());
@@ -368,7 +370,14 @@ mod tests {
       })
       .await;
 
-    backend.documents.read().await.get(&DocLoc::new(mini_uri)).unwrap().diagnostics.clone()
+    let document_store = backend.documents.read().await;
+    let document = document_store.get(&DocLoc::new(mini_uri)).unwrap();
+
+    callback(document)
+  }
+
+  async fn open_and_diagnose(path: &str) -> Vec<Diagnostic> {
+    open(path, |document| document.diagnostics.clone()).await
   }
 
   #[allow(clippy::unnecessary_wraps)]
