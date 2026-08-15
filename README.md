@@ -64,6 +64,7 @@ See the extension [here](https://github.com/TheBizzle/organic-lsp-vscode).
     * Built-in constants, note names, functions
     * Named parameters to built-in functions
     * User-defined variables
+  * Formatting of code selection
 
 ## What additional things might it be able to do in the future?
 
@@ -76,6 +77,5 @@ See the extension [here](https://github.com/TheBizzle/organic-lsp-vscode).
     * Better code completion
       * Sorted by priority
       * With context/scope/type awareness
-    * Formatting of code selection
     * Whole-document formatting (while preserving whitespace and comments)
 

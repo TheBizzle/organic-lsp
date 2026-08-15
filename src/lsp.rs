@@ -9,22 +9,26 @@ mod definition;
 mod document;
 mod full_analysis;
 mod kebab_cased;
+mod miniformat;
 mod named_arg;
 mod pretty_type;
 mod semantic_tokens;
 
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::iter::once;
 
-use tower_lsp_server::jsonrpc::Result;
+use tower_lsp_server::jsonrpc::{Error, ErrorCode, Result};
 use tower_lsp_server::ls_types::{
   CodeActionParams, CodeActionProviderCapability, CodeActionResponse, CompletionOptions, CompletionParams,
   CompletionResponse, DidChangeTextDocumentParams, DidOpenTextDocumentParams, DocumentFormattingParams,
-  GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents, HoverParams, HoverProviderCapability,
-  InitializeParams, InitializeResult, InitializedParams, Location, MarkedString, MessageType, OneOf,
-  Position, PrepareRenameResponse, Range as TowerRange, ReferenceParams, RenameOptions, RenameParams,
-  SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions, SemanticTokensParams,
-  SemanticTokensResult, SemanticTokensServerCapabilities, ServerCapabilities, TextDocumentPositionParams,
-  TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Uri, WorkDoneProgressOptions, WorkspaceEdit,
+  DocumentRangeFormattingParams, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents,
+  HoverParams, HoverProviderCapability, InitializeParams, InitializeResult, InitializedParams, Location,
+  MarkedString, MessageType, OneOf, Position, PrepareRenameResponse, Range as TowerRange, ReferenceParams,
+  RenameOptions, RenameParams, SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions,
+  SemanticTokensParams, SemanticTokensResult, SemanticTokensServerCapabilities, ServerCapabilities,
+  TextDocumentPositionParams, TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Uri,
+  WorkDoneProgressOptions, WorkspaceEdit,
 };
 use tower_lsp_server::{ClientSocket, LanguageServer, LspService};
 
@@ -32,13 +36,17 @@ use crate::core::doc_loc::DocLoc;
 
 use crate::lexer::token::{Token, TokenType::Identifier};
 
+use crate::parser::parse;
+
 use crate::lsp::backend::LspBackend;
 use crate::lsp::code_action::{actions_in_diagnostics, actions_in_selection, actions_under_cursor};
 use crate::lsp::common::token_to_location;
 use crate::lsp::completion::completion;
 use crate::lsp::definition::describe_defn;
+use crate::lsp::diagnostics::{LspError::LspParserError, error_as_diagnostic};
 use crate::lsp::document::{Entity, LValueInfo};
 use crate::lsp::full_analysis::store_and_reanalyze;
+use crate::lsp::miniformat::miniformat;
 use crate::lsp::named_arg::describe_named_arg;
 use crate::lsp::semantic_tokens::{TOKEN_TYPES, calc_semantic_tokens};
 
@@ -76,6 +84,7 @@ impl LanguageServer for LspBackend {
         })),
         code_action_provider: Some(CodeActionProviderCapability::Simple(true)),
         document_formatting_provider: Some(OneOf::Left(true)),
+        document_range_formatting_provider: Some(OneOf::Left(true)),
 
         ..ServerCapabilities::default()
       },
@@ -167,6 +176,105 @@ impl LanguageServer for LspBackend {
     });
 
     Ok(res_opt)
+  }
+
+  async fn range_formatting(&self, params: DocumentRangeFormattingParams) -> Result<Option<Vec<TextEdit>>> {
+    let uri = DocLoc::new(params.text_document.uri.to_string());
+
+    self.documents.read().await.get(&uri).map_or_else(
+      || {
+        Result::Err(Error {
+          code: ErrorCode::InvalidRequest,
+          message: Cow::Owned(format!("Invalid document: {uri:?}")),
+          data: None,
+        })
+      },
+      |doc| {
+        let TowerRange { start, end } = params.range;
+
+        // Intention: Avoid exploding on `0 - 1` when selecting an empty line --Jason B. (8/14/26)
+        let mut end_pos = end;
+        while end_pos.line > start.line && end_pos.character == 0 {
+          end_pos.line -= 1;
+          end_pos.character = doc
+            .tokens
+            .get(end_pos.line as usize)
+            .unwrap()
+            .iter()
+            .next_back()
+            .map_or(0, |(range, _)| range.end);
+        }
+
+        if let Some(start_line) = doc.tokens.get(start.line as usize)
+          && let Some(start_token) = start_line.get(&start.character)
+          && let Some(end_line) = doc.tokens.get(end_pos.line as usize)
+          && let Some(end_token) = end_line.get(&(end_pos.character - 1))
+        {
+          let mut tokens = Vec::new();
+
+          for line_num in start.line..=end_pos.line {
+            if let Some(line) = doc.tokens.get(line_num as usize) {
+              let rightmost_column = line.iter().next_back().map_or(0, |(range, _)| range.end);
+              #[rustfmt::skip]
+              let beginning_column = if line_num == start.line { start.character } else { 0 };
+              #[rustfmt::skip]
+              let final_column = if line_num == end_pos.line { end_pos.character } else { rightmost_column };
+              for (_, token) in line.overlapping(beginning_column..final_column) {
+                tokens.push(token.clone());
+              }
+            } else {
+              let message = Cow::Borrowed("Range includes non-existent line");
+              return Result::Err(Error { code: ErrorCode::InvalidParams, message, data: None });
+            }
+          }
+
+          match parse(tokens) {
+            Err(perror) => {
+              let message = Cow::Owned(format!(
+                "Unparsable selection: {}",
+                error_as_diagnostic(LspParserError(perror)).message
+              ));
+              Result::Err(Error { code: ErrorCode::InvalidParams, message, data: None })
+            },
+            Ok(mini_ast) => {
+              let indent_depth = start_token.source_loc.column - 1;
+              let indent = " ".repeat(indent_depth as usize);
+              let max_width = 110 - indent_depth;
+              let formatted = miniformat(&mini_ast, max_width);
+              let new_text = formatted
+                .split_once('\n')
+                .map(|(head, tail)| {
+                  once(head.to_string())
+                    .chain(tail.split('\n').map(|line| {
+                      if line.trim().is_empty() {
+                        String::new()
+                      } else {
+                        format!("{indent}{line}")
+                      }
+                    }))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+                })
+                .unwrap_or(formatted);
+
+              let real_range = TowerRange {
+                start: Position { line: start.line, character: start_token.source_loc.column - 1 },
+                end: Position {
+                  line: end_pos.line,
+                  character: end_token.source_loc.column + end_token.source_loc.length - 1,
+                },
+              };
+
+              let edit = TextEdit { range: real_range, new_text };
+              Result::Ok(Some(vec![edit]))
+            },
+          }
+        } else {
+          let message = Cow::Borrowed("Range can only include complete statements");
+          Result::Err(Error { code: ErrorCode::InvalidParams, message, data: None })
+        }
+      },
+    )
   }
 
   async fn goto_definition(&self, params: GotoDefinitionParams) -> Result<Option<GotoDefinitionResponse>> {
