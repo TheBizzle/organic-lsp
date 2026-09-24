@@ -4,8 +4,8 @@ use std::sync::Arc;
 use crate::core::address::{NamedVarAddress, ScopeAddress};
 
 use crate::analyzer::diagnostics::AnalyzerErrorType::{
-  DuplicateParameter, ExtraArgument, MissingArgument, NoSuchFn, NoSuchVariable, TypeMismatch,
-  VarCannotInitInTermsOfSelf,
+  DuplicateParameter, ExtraArgument, MissingArgument, NeverValidFillable, NoSuchFn, NoSuchVariable,
+  PhaseOnlyInOscillatorWaveform, PositionOnlyInGranulateShape, TypeMismatch, VarCannotInitInTermsOfSelf,
 };
 
 use crate::analyzer::diagnostics::AnalyzerWarningType::{
@@ -19,6 +19,7 @@ use Operator::{
   Divide, Equals, GreaterOrEquals, GreaterThan, LessOrEquals, LessThan, Minus, Plus, Times, ToThePowerOf,
 };
 
+use crate::analyzer::analysis::FillableState::{Absent, InArg, InFunction};
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT, NonVarToken};
 use crate::analyzer::common::{push_error, push_warning, resolve_addr, resolve_type};
 use crate::analyzer::function::{Function, ParamInfo};
@@ -30,6 +31,7 @@ use crate::analyzer::value::TermDefn::UserDefined;
 pub(super) fn crawl_expr(state: &mut AnalysisState, expr: &Expr) -> Option<OT> {
   match expr {
     Expr::Call { call, .. } => crawl_function_call(state, call),
+    Expr::FilledValue { name, token, end, .. } => crawl_filled_value(state, name, token, end),
     Expr::Function { value, .. } => crawl_function_def(state, value),
     Expr::Grouping { value, .. } => crawl_expr(state, value.as_ref()),
     Expr::List { values, .. } => crawl_list(state, values),
@@ -47,6 +49,34 @@ pub(super) fn crawl_expr(state: &mut AnalysisState, expr: &Expr) -> Option<OT> {
   }
 }
 
+fn crawl_filled_value(
+  state: &mut AnalysisState, symbol: &Symbol, token: &Token, ender: &Token,
+) -> Option<OT> {
+  match symbol.name.to_lowercase().as_str() {
+    "phase" => {
+      if state.oscillator_fillable_state == InArg {
+        Some(OT::Number)
+      } else {
+        push_error(state, token.clone(), PhaseOnlyInOscillatorWaveform { end_offender: ender.clone() });
+        None
+      }
+    },
+    "position" => {
+      if state.granulate_fillable_state == InArg {
+        Some(OT::Number)
+      } else {
+        push_error(state, token.clone(), PositionOnlyInGranulateShape { end_offender: ender.clone() });
+        None
+      }
+    },
+    _ => {
+      let name = symbol.name.clone();
+      push_error(state, token.clone(), NeverValidFillable { name, end_offender: ender.clone() });
+      None
+    },
+  }
+}
+
 pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall) -> Option<OT> {
   let FuncCall { func: Symbol { name, token }, args } = fn_call;
 
@@ -57,6 +87,19 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall)
     },
 
     Some(addr) => {
+      let granulate_fillable_state = state.granulate_fillable_state.clone();
+      let oscillator_fillable_state = state.oscillator_fillable_state.clone();
+
+      match name.to_lowercase().as_str() {
+        "granulate" if state.granulate_fillable_state == Absent => {
+          state.granulate_fillable_state = InFunction;
+        },
+        "oscillator" if state.oscillator_fillable_state == Absent => {
+          state.oscillator_fillable_state = InFunction;
+        },
+        _ => {},
+      }
+
       {
         let mut seen_names = HashSet::<String>::new();
         for arg in args {
@@ -71,13 +114,30 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall)
       let (mut actual_tokens, actual_args): (HashMap<_, _>, Vec<_>) = args
         .iter()
         .map(|Arg { name, value }| {
+          let inner_granulate_fillable_state = state.granulate_fillable_state.clone();
+          let inner_oscillator_fillable_state = state.oscillator_fillable_state.clone();
+
+          match name.name.to_lowercase().as_str() {
+            "waveform" if state.oscillator_fillable_state == InFunction => {
+              state.oscillator_fillable_state = InArg;
+            },
+            "shape" if state.granulate_fillable_state == InFunction => {
+              state.granulate_fillable_state = InArg; //
+            },
+            _ => {},
+          }
+
           let mapping = (name.name.clone(), name.token.clone());
           let pram = ParamInfo(name.name.clone(), crawl_expr(state, value).unwrap_or(OT::Unknown), false);
+
+          state.granulate_fillable_state = inner_granulate_fillable_state;
+          state.oscillator_fillable_state = inner_oscillator_fillable_state;
+
           (mapping, pram)
         })
         .collect();
 
-      match resolve_type(state, &addr) {
+      let result = match resolve_type(state, &addr) {
         OT::Function(func) => {
           crawl_verified_function_call(state, token, &addr, &mut actual_tokens, actual_args, &func)
         },
@@ -87,7 +147,12 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall)
           push_error(state, token.clone(), TypeMismatch { expected, got });
           None
         },
-      }
+      };
+
+      state.granulate_fillable_state = granulate_fillable_state;
+      state.oscillator_fillable_state = oscillator_fillable_state;
+
+      result
     },
   }
 }

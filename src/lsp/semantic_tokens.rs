@@ -8,7 +8,7 @@ use crate::lexer::token::Token;
 use crate::lexer::token::TokenType::{
   Assign, BlockComment, Caret, Colon, Comma, Comment, Divide, Equals, GreaterThan, GreaterThanEquals,
   Identifier, Include, LeftBrace, LeftBracket, LeftParen, LessThan, LessThanEquals, Minus, Multiply, Newline,
-  Number, Plus, RightBrace, RightBracket, RightParen, String, UnterminatedString, Whitespace,
+  Number, Pipe, Plus, RightBrace, RightBracket, RightParen, String, UnterminatedString, Whitespace,
 };
 
 use crate::analyzer::analysis::{DefnInfo, HighlightingType as HLT};
@@ -89,6 +89,7 @@ fn convert_token(token: &Token, last_loc: &SourceLoc, document: &Document) -> Op
     Number(_) => Some(SemanticTokenType::NUMBER),
     Minus => Some(SemanticTokenType::OPERATOR),
     Multiply => Some(SemanticTokenType::OPERATOR),
+    Pipe => None,
     Plus => Some(SemanticTokenType::OPERATOR),
     RightBrace => None,
     RightBracket => None,

@@ -22,8 +22,11 @@ pub enum AnalyzerErrorType {
   DuplicateVar,
   ExtraArgument { name: String },
   MissingArgument { name: String, typ: OrganicType },
+  NeverValidFillable { name: String, end_offender: Token },
   NoSuchFn,
   NoSuchVariable,
+  PhaseOnlyInOscillatorWaveform { end_offender: Token },
+  PositionOnlyInGranulateShape { end_offender: Token },
   TypeMismatch { expected: OrganicType, got: OrganicType },
   VarCannotInitInTermsOfSelf,
 }

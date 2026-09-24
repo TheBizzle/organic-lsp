@@ -64,6 +64,8 @@ pub enum TokenType {
   #[token("*")]
   Multiply,
 
+  #[token("|")]
+  Pipe,
   #[token("+")]
   Plus,
 

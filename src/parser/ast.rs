@@ -16,6 +16,12 @@ pub enum Expr {
     start: Token,
     end: Token,
   },
+  FilledValue {
+    name: Symbol,
+    start: Token,
+    end: Token,
+    token: Token,
+  },
   Function {
     value: FuncLiteral,
     token: Token,
@@ -136,6 +142,7 @@ impl Expr {
   pub fn get_token(&self) -> Token {
     match self {
       Self::Call { token, .. }
+      | Self::FilledValue { token, .. }
       | Self::Function { token, .. }
       | Self::Grouping { token, .. }
       | Self::List { token, .. }
@@ -151,6 +158,7 @@ impl Expr {
   pub fn get_start(&self) -> Token {
     match self {
       Self::Call { start, .. }
+      | Self::FilledValue { start, .. }
       | Self::Function { start, .. }
       | Self::Grouping { start, .. }
       | Self::List { start, .. }
@@ -166,6 +174,7 @@ impl Expr {
   pub fn get_end(&self) -> Token {
     match self {
       Self::Call { end, .. }
+      | Self::FilledValue { end, .. }
       | Self::Function { end, .. }
       | Self::Grouping { end, .. }
       | Self::List { end, .. }

@@ -11,8 +11,9 @@ use crate::parser::diagnostics::ParserError::{
 };
 
 use crate::analyzer::diagnostics::AnalyzerErrorType::{
-  self, BadInternalState, DuplicateParameter, DuplicateVar, ExtraArgument, MissingArgument, NoSuchFn,
-  NoSuchVariable, TypeMismatch, VarCannotInitInTermsOfSelf,
+  self, BadInternalState, DuplicateParameter, DuplicateVar, ExtraArgument, MissingArgument,
+  NeverValidFillable, NoSuchFn, NoSuchVariable, PhaseOnlyInOscillatorWaveform, PositionOnlyInGranulateShape,
+  TypeMismatch, VarCannotInitInTermsOfSelf,
 };
 
 use crate::analyzer::diagnostics::AnalyzerLintType::{self, CamelCase, SnakeCase};
@@ -49,8 +50,11 @@ pub enum DiagnosticCode {
   Analyzer_Error_DuplicateVar,
   Analyzer_Error_ExtraArgument,
   Analyzer_Error_MissingArgument,
+  Analyzer_Error_NeverValidFillable,
   Analyzer_Error_NoSuchFn,
   Analyzer_Error_NoSuchVariable,
+  Analyzer_Error_PhaseOnlyInOscillatorWaveform,
+  Analyzer_Error_PositionOnlyInGranulateShape,
   Analyzer_Error_TypeMismatch,
   Analyzer_Error_VarCannotInitInTermsOfSelf,
   Analyzer_Lint_CamelCase,
@@ -62,6 +66,7 @@ pub enum DiagnosticCode {
 use DiagnosticCode as DC;
 
 #[must_use]
+#[allow(clippy::too_many_lines)]
 pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
   let (range, message, diag_code) = match error {
     LspLexerError(FileTooBig { size, line_num }) => {
@@ -121,6 +126,14 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
         format!("Missing argument of type \"{:?}\" to function \"{:?}\": {name}", typ, offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_MissingArgument)
     },
+    LspAnalyzerError { typ: NeverValidFillable { name, end_offender }, offender } => {
+      let msg = format!("Nothing named `{name}` is ever a valid fillable.");
+      (
+        as_range_locs(&offender.source_loc, &end_offender.source_loc),
+        msg,
+        DC::Analyzer_Error_NeverValidFillable,
+      )
+    },
     LspAnalyzerError { typ: NoSuchFn, offender } => {
       let msg = format!("No such function: {:?}", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_NoSuchFn)
@@ -128,6 +141,22 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
     LspAnalyzerError { typ: NoSuchVariable, offender } => {
       let msg = format!("No such variable: {:?}", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_NoSuchVariable)
+    },
+    LspAnalyzerError { typ: PhaseOnlyInOscillatorWaveform { end_offender }, offender } => {
+      let msg = "`phase` can only be filled within the `waveform` argument to `oscillator`.";
+      (
+        as_range_locs(&offender.source_loc, &end_offender.source_loc),
+        msg.to_string(),
+        DC::Analyzer_Error_PhaseOnlyInOscillatorWaveform,
+      )
+    },
+    LspAnalyzerError { typ: PositionOnlyInGranulateShape { end_offender }, offender } => {
+      let msg = "`position` can only be filled within the `shape` argument to `granulate`.";
+      (
+        as_range_locs(&offender.source_loc, &end_offender.source_loc),
+        msg.to_string(),
+        DC::Analyzer_Error_PhaseOnlyInOscillatorWaveform,
+      )
     },
     LspAnalyzerError { typ: TypeMismatch { expected, got }, offender } => {
       let msg = format!(
@@ -218,6 +247,13 @@ const fn as_range_mini(mini: MiniLoc) -> Range {
 
 const fn as_range(source_loc: &SourceLoc) -> Range {
   as_range3(source_loc.line, source_loc.column, source_loc.length)
+}
+
+const fn as_range_locs(loc1: &SourceLoc, loc2: &SourceLoc) -> Range {
+  Range {
+    start: Position { line: loc1.line - 1, character: loc1.column - 1 },
+    end: Position { line: loc2.line - 1, character: loc2.column - 1 + loc2.length },
+  }
 }
 
 const fn as_range3(line: u32, column: u32, length: u32) -> Range {

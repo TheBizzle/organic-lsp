@@ -72,9 +72,18 @@ impl Analysis {
   }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub(super) enum FillableState {
+  Absent,
+  InFunction,
+  InArg,
+}
+
 #[derive(Debug)]
 pub(super) struct AnalysisState {
   pub analysis: Analysis,
+  pub granulate_fillable_state: FillableState,
+  pub oscillator_fillable_state: FillableState,
   pub initting_var_opt: Option<String>,
   pub last_scope_addr: ScopeAddress,
   pub scopes: Vec<Scope>,
@@ -86,6 +95,8 @@ impl Default for AnalysisState {
     let BuiltIns { bindings, defs, vars } = initial_state();
     Self {
       analysis: Analysis::new(defs),
+      granulate_fillable_state: FillableState::Absent,
+      oscillator_fillable_state: FillableState::Absent,
       initting_var_opt: None,
       last_scope_addr: INITIAL_SCOPE_ADDRESS.clone(),
       scopes: vec![Scope { env: Env { bindings }, address: INITIAL_SCOPE_ADDRESS.clone() }],

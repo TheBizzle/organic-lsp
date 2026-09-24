@@ -32,6 +32,7 @@ extern {
     "<="         => Token { token_type: TokenType::LessThanEquals    , .. },
     "-"          => Token { token_type: TokenType::Minus             , .. },
     "*"          => Token { token_type: TokenType::Multiply          , .. },
+    "|"          => Token { token_type: TokenType::Pipe              , .. },
     "+"          => Token { token_type: TokenType::Plus              , .. },
     "}"          => Token { token_type: TokenType::RightBrace        , .. },
     "]"          => Token { token_type: TokenType::RightBracket      , .. },
@@ -137,6 +138,8 @@ Primary: Expr = {
   <token: "["> <values: ExprSeq> <closer: "]"> => Expr::List { values, start: token.clone(), end: closer, token },
 
   <token: "("> <expr: Expr> <closer: ")"> => Expr::Grouping { value: Box::new(expr), start: token.clone(), end: closer, token },
+
+  <token: "|"> <name: "identifier"> <closer: "|"> => Expr::FilledValue { name: as_symbol(&name, "filled value"), start: token.clone(), end: closer, token },
 
   <token: "identifier"> => Expr::LValue { name: as_symbol(&token, "identifier"), start: token.clone(), end: token.clone(), token },
 

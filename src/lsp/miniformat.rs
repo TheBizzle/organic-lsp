@@ -95,6 +95,7 @@ fn render_var_decl(decl: &VarDecl, avail_width: u32) -> String {
 fn render_expr(expr: &Expr, avail_width: u32) -> String {
   match expr {
     Expr::Call { call, .. } => render_func_call(call, avail_width),
+    Expr::FilledValue { name, .. } => format!("|{}|", name.name.clone()),
     Expr::Function { value, .. } => render_func_def(value, avail_width),
     Expr::Grouping { value, .. } => format!("({})", render_expr(value, avail_width.saturating_sub(2))),
     Expr::List { values, .. } => lay_out_variadic("[", ",", "]", values, render_expr, avail_width),
