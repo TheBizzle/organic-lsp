@@ -16,6 +16,7 @@ mod semantic_tokens;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::future::ready;
 use std::iter::once;
 
 use tower_lsp_server::jsonrpc::{Error, ErrorCode, Result};
@@ -60,7 +61,7 @@ pub fn new_lsp() -> (LspService<LspBackend>, ClientSocket) {
 
 impl LanguageServer for LspBackend {
   async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
-    Ok(InitializeResult {
+    ready(Ok(InitializeResult {
       capabilities: ServerCapabilities {
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
 
@@ -90,7 +91,8 @@ impl LanguageServer for LspBackend {
       },
 
       ..InitializeResult::default()
-    })
+    }))
+    .await
   }
 
   async fn initialized(&self, _: InitializedParams) {
@@ -98,7 +100,7 @@ impl LanguageServer for LspBackend {
   }
 
   async fn shutdown(&self) -> Result<()> {
-    Ok(())
+    ready(Ok(())).await
   }
 
   async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
