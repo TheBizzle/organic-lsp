@@ -15,7 +15,9 @@ use crate::analyzer::diagnostics::AnalyzerWarningType::{
 use crate::lexer::token::Token;
 
 use crate::parser::ast::{Arg, Expr, Formal, FuncCall, FuncLiteral, Operator, Statement, Symbol};
-use Operator::{Divide, Equals, GreaterOrEquals, GreaterThan, LessOrEquals, LessThan, Minus, Plus, Times};
+use Operator::{
+  Divide, Equals, GreaterOrEquals, GreaterThan, LessOrEquals, LessThan, Minus, Plus, Times, ToThePowerOf,
+};
 
 use crate::analyzer::analysis::{AnalysisState, DefnInfo, HighlightingType as HLT, NonVarToken};
 use crate::analyzer::common::{push_error, push_warning, resolve_addr, resolve_type};
@@ -324,7 +326,7 @@ fn crawl_op(state: &mut AnalysisState, left: &Expr, op: &Operator, right: &Expr)
   }
 
   match op {
-    Plus | Minus | Times | Divide => OT::Number,
+    Plus | Minus | Times | Divide | ToThePowerOf => OT::Number,
     Equals | GreaterThan | GreaterOrEquals | LessThan | LessOrEquals => OT::Boolean,
   }
 }

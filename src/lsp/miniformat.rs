@@ -124,6 +124,7 @@ fn render_operator(operator: &Operator) -> String {
     Operator::LessOrEquals => "<=",
     Operator::GreaterThan => ">",
     Operator::GreaterOrEquals => ">=",
+    Operator::ToThePowerOf => "^",
   }
   .to_string()
 }

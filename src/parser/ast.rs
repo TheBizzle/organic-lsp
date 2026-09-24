@@ -85,6 +85,7 @@ pub enum Operator {
   LessOrEquals,
   GreaterThan,
   GreaterOrEquals,
+  ToThePowerOf,
 }
 
 #[derive(Debug)]

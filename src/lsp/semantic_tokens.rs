@@ -6,9 +6,9 @@ use crate::lexer::lex;
 use crate::lexer::source_loc::SourceLoc;
 use crate::lexer::token::Token;
 use crate::lexer::token::TokenType::{
-  Assign, BlockComment, Colon, Comma, Comment, Divide, Equals, GreaterThan, GreaterThanEquals, Identifier,
-  Include, LeftBrace, LeftBracket, LeftParen, LessThan, LessThanEquals, Minus, Multiply, Newline, Number,
-  Plus, RightBrace, RightBracket, RightParen, String, UnterminatedString, Whitespace,
+  Assign, BlockComment, Caret, Colon, Comma, Comment, Divide, Equals, GreaterThan, GreaterThanEquals,
+  Identifier, Include, LeftBrace, LeftBracket, LeftParen, LessThan, LessThanEquals, Minus, Multiply, Newline,
+  Number, Plus, RightBrace, RightBracket, RightParen, String, UnterminatedString, Whitespace,
 };
 
 use crate::analyzer::analysis::{DefnInfo, HighlightingType as HLT};
@@ -70,6 +70,7 @@ fn convert_token(token: &Token, last_loc: &SourceLoc, document: &Document) -> Op
   let opt = match token_type {
     Assign => None,
     BlockComment => Some(SemanticTokenType::COMMENT),
+    Caret => Some(SemanticTokenType::OPERATOR),
     Colon => None,
     Comma => None,
     Comment => Some(SemanticTokenType::COMMENT),

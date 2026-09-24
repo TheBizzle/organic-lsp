@@ -18,6 +18,8 @@ pub enum TokenType {
   #[regex(r"(?s)/\*.*?\*/")]
   BlockComment,
 
+  #[token("^")]
+  Caret,
   #[token(":")]
   Colon,
   #[token(",")]
