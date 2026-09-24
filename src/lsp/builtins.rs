@@ -61,6 +61,7 @@ pub(super) static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new
     ("low-pass", "FILL_IN", HashMap::from([("threshold", "FILL_IN")])),
     ("max", "FILL_IN", HashMap::from([("values", "FILL_IN")])),
     ("min", "FILL_IN", HashMap::from([("values", "FILL_IN")])),
+    ("modulo", "FILL_IN", HashMap::from([("value", "FILL_IN"), ("divisor", "FILL_IN")])),
     ("noise", "FILL_IN", HashMap::from([("effects", "FILL_IN"), ("pan", "FILL_IN"), ("volume", "FILL_IN")])),
     ("none", "FILL_IN", HashMap::from([("values", "FILL_IN")])),
     (
