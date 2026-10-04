@@ -114,7 +114,7 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_DuplicateParameter)
     },
     LspAnalyzerError { typ: DuplicateVar, offender } => {
-      let msg = format!("Duplicate variable: {:?}", offender.token_type);
+      let msg = format!("Cannot redeclare variable: {:?}", offender.token_type);
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_DuplicateVar)
     },
     LspAnalyzerError { typ: ExtraArgument { name }, offender } => {
