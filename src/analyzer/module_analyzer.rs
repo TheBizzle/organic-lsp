@@ -41,7 +41,10 @@ pub(super) fn crawl_var_decl(state: &mut AnalysisState, var_decl: &VarDecl) {
     push_lint(state, var_decl.name.token.clone(), CamelCase);
   }
 
-  if resolve_addr(state, var_decl.name.name.as_str()).is_some() {
+  if let Some(dupe_addr) = resolve_addr(state, var_decl.name.name.as_str())
+    && let Some(UserDefined { token: dupe_token, .. }) = state.analysis.definitions.get(&dupe_addr)
+  {
+    push_error(state, dupe_token.clone(), DuplicateVar);
     push_error(state, var_decl.name.token.clone(), DuplicateVar);
   } else {
     let defn = UserDefined {
