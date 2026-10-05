@@ -93,7 +93,7 @@ fn value_to_type(value: ConstantValue) -> OrganicType {
 
 pub(super) static INITIAL_SCOPE_ADDRESS: &ScopeAddress = &ScopeAddress { n: 0 };
 
-static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
+static FUNCTIONS: LazyLock<[StdLibFn; 35]> = LazyLock::new(|| {
   [
     StdLibFn {
       name: "absolute",
@@ -154,6 +154,19 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("mix"), OT::Number, true),
         ],
         return_type: OT::AudioEffect,
+      },
+    },
+    StdLibFn {
+      name: "envelope",
+      func: Function {
+        params: vec![
+          PI(own("attack"), OT::Number, false),
+          PI(own("release"), OT::Number, false),
+          PI(own("from"), OT::Number, true),
+          PI(own("to"), OT::Number, true),
+          PI(own("sustain"), OT::Number, true),
+        ],
+        return_type: OT::Number,
       },
     },
     StdLibFn {

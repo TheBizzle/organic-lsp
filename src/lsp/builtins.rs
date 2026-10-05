@@ -27,6 +27,17 @@ pub(super) static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new
     ("delay", "FILL_IN", HashMap::from([("feedback", "FILL_IN"), ("delay", "FILL_IN"), ("mix", "FILL_IN")])),
     ("effect-group", "FILL_IN", HashMap::from([("effects", "FILL_IN"), ("mix", "FILL_IN")])),
     (
+      "envelope",
+      "FILL_IN",
+      HashMap::from([
+        ("attack", "FILL_IN"),
+        ("release", "FILL_IN"),
+        ("from", "FILL_IN"),
+        ("to", "FILL_IN"),
+        ("sustain", "FILL_IN"),
+      ]),
+    ),
+    (
       "granulate",
       "FILL_IN",
       HashMap::from([
