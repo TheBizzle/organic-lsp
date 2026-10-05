@@ -168,19 +168,19 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {
       name: "group",
       func: Function {
         params: vec![
-          PI(own("sources"), OT::List(Box::new(OT::Number)), false),
+          PI(own("sources"), OT::List(Box::new(OT::AudioSource)), false),
           PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {
@@ -266,7 +266,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {
@@ -286,7 +286,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {
@@ -338,7 +338,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {
@@ -350,7 +350,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {
@@ -372,7 +372,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {
@@ -384,7 +384,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {
@@ -408,7 +408,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 34]> = LazyLock::new(|| {
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
-        return_type: OT::Number,
+        return_type: OT::AudioSource,
       },
     },
     StdLibFn {

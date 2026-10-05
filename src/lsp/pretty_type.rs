@@ -4,6 +4,7 @@ use crate::analyzer::organic_type::OrganicType as OT;
 pub(super) fn pretty_type(typ: &OT) -> String {
   match typ {
     OT::AudioEffect => "effect".to_string(),
+    OT::AudioSource => "audio-source".to_string(),
     OT::Boolean => "true/false".to_string(),
     OT::Function(func) => pretty_func(func.as_ref()),
     OT::Generic(name) => format!("<{name}>"),

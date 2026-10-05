@@ -241,6 +241,37 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn opens_and_errors_on_audio_source_is_not_number() {
+    let severity = Some(DiagnosticSeverity::ERROR);
+
+    let message1 = "Could not match expected type `number` with actual type `audio-source`, regarding value `Identifier(\"to\")`.".to_string();
+    let start1 = Position { line: 0, character: 32 };
+    let end1 = Position { line: 0, character: 34 };
+    let range1 = Range { start: start1, end: end1 };
+    let diagnostic1 = Diagnostic {
+      range: range1,
+      severity,
+      code: code(DC::Analyzer_Error_TypeMismatch),
+      message: message1,
+      ..Default::default()
+    };
+
+    let message2 = "Could not match expected type `number` with actual type `audio-source`, regarding value `Identifier(\"from\")`.".to_string();
+    let start2 = Position { line: 0, character: 6 };
+    let end2 = Position { line: 0, character: 10 };
+    let range2 = Range { start: start2, end: end2 };
+    let diagnostic2 = Diagnostic {
+      range: range2,
+      severity,
+      code: code(DC::Analyzer_Error_TypeMismatch),
+      message: message2,
+      ..Default::default()
+    };
+
+    test_errors("./tests/audio_source_is_not_number", vec![diagnostic1, diagnostic2]).await;
+  }
+
+  #[tokio::test]
   async fn opens_and_errors_on_invalid_analysis() {
     let severity = Some(DiagnosticSeverity::ERROR);
 
