@@ -352,8 +352,10 @@ mod tests {
     assert!(diagnostics.is_empty(), "Expected {path} to have no errors, got: {diagnostics:?}");
   }
 
-  async fn test_errors(path: &str, expected: Vec<Diagnostic>) {
-    let actual = open_and_diagnose(path).await;
+  async fn test_errors(path: &str, mut expected: Vec<Diagnostic>) {
+    let mut actual = open_and_diagnose(path).await;
+    sort(&mut actual);
+    sort(&mut expected);
     assert_eq!(actual, expected);
   }
 
@@ -390,5 +392,13 @@ mod tests {
   #[allow(clippy::unnecessary_wraps)]
   fn code(n: DC) -> Option<NumberOrString> {
     Some(NumberOrString::Number(n as i32))
+  }
+
+  fn sort(diagnostics: &mut [Diagnostic]) {
+    diagnostics.sort_by(|a, b| {
+      (a.range.start.line, a.range.start.character, a.range.end.line, a.range.end.character, &a.message).cmp(
+        &(b.range.start.line, b.range.start.character, b.range.end.line, b.range.end.character, &b.message),
+      )
+    });
   }
 }
