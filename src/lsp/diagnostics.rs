@@ -155,7 +155,7 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
       (
         as_range_locs(&offender.source_loc, &end_offender.source_loc),
         msg.to_string(),
-        DC::Analyzer_Error_PhaseOnlyInOscillatorWaveform,
+        DC::Analyzer_Error_PositionOnlyInGranulateShape,
       )
     },
     LspAnalyzerError { typ: TypeMismatch { expected, got }, offender } => {
