@@ -33,12 +33,12 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn can_open_music_pluck() {
+  async fn can_open_basic_pluck() {
     test_no_problem("./Organic/examples/basic/pluck").await;
   }
 
   #[tokio::test]
-  async fn can_open_music_scale() {
+  async fn can_open_basic_scale() {
     test_no_problem("./Organic/examples/basic/scale").await;
   }
 
