@@ -354,7 +354,7 @@ mod tests {
 
   async fn test_no_problem(path: &str) {
     let diagnostics = open_and_diagnose(path).await;
-    assert!(diagnostics.is_empty(), "Expected {path} to have no errors, got: {diagnostics:?}");
+    assert!(diagnostics.is_empty(), "Expected {path} to have no errors, got: {diagnostics:#?}");
   }
 
   async fn test_errors(path: &str, mut expected: Vec<Diagnostic>) {
