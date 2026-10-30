@@ -10,7 +10,7 @@ use crate::lexer::token::Token;
 use crate::analyzer::builtins::{BuiltIns, INITIAL_SCOPE_ADDRESS, initial_state};
 use crate::analyzer::diagnostics::AnalyzerDiagnostic;
 use crate::analyzer::function::Function;
-use crate::analyzer::organic_type::OrganicType;
+use crate::analyzer::organic_type::OrganicType as OT;
 use crate::analyzer::scope::{Env, Scope};
 use crate::analyzer::value::TermDefn;
 
@@ -24,7 +24,7 @@ pub enum HighlightingType {
 #[derive(Debug, Eq, PartialEq)]
 pub struct DefnInfo {
   pub hl_type: HighlightingType,
-  pub organic_type: OrganicType,
+  pub organic_type: OT,
   pub token: Token,
 }
 
@@ -82,12 +82,13 @@ pub(super) enum FillableState {
 #[derive(Debug)]
 pub(super) struct AnalysisState {
   pub analysis: Analysis,
+  pub generic_bindings: HashMap<String, OT>,
   pub granulate_fillable_state: FillableState,
   pub oscillator_fillable_state: FillableState,
   pub initting_var_opt: Option<String>,
   pub last_scope_addr: ScopeAddress,
   pub scopes: Vec<Scope>,
-  pub vars: HashMap<NamedVarAddress, OrganicType>,
+  pub vars: HashMap<NamedVarAddress, OT>,
 }
 
 impl Default for AnalysisState {
@@ -95,12 +96,39 @@ impl Default for AnalysisState {
     let BuiltIns { bindings, defs, vars } = initial_state();
     Self {
       analysis: Analysis::new(defs),
+      generic_bindings: HashMap::new(),
       granulate_fillable_state: FillableState::Absent,
       oscillator_fillable_state: FillableState::Absent,
       initting_var_opt: None,
       last_scope_addr: INITIAL_SCOPE_ADDRESS.clone(),
       scopes: vec![Scope { env: Env { bindings }, address: INITIAL_SCOPE_ADDRESS.clone() }],
       vars,
+    }
+  }
+}
+
+impl AnalysisState {
+  pub fn find_generic_bindings(&mut self, base: OT, got: &OT) -> OT {
+    match base {
+      OT::Generic(name) if let Some(existing_binding) = self.generic_bindings.get(&name) => {
+        existing_binding.clone()
+      },
+      OT::Generic(name) => {
+        self.generic_bindings.insert(name, got.clone());
+        got.clone()
+      },
+      OT::List(inner) if let OT::List(inner_got) = got => {
+        OT::List(Box::new(self.find_generic_bindings(*inner, inner_got)))
+      },
+      _ => base,
+    }
+  }
+
+  pub fn consume_generic_binding(&mut self, typ: &OT) -> Option<OT> {
+    match typ {
+      OT::Generic(name) => self.generic_bindings.remove(name),
+      OT::List(inner) => self.consume_generic_binding(inner).map(|t| OT::List(Box::new(t))),
+      _ => Some(typ.clone()),
     }
   }
 }
