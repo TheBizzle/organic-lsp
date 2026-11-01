@@ -84,6 +84,7 @@ pub(super) struct AnalysisState {
   pub analysis: Analysis,
   pub generic_bindings: HashMap<String, OT>,
   pub granulate_fillable_state: FillableState,
+  pub map_fillable_state: FillableState,
   pub oscillator_fillable_state: FillableState,
   pub initting_var_opt: Option<String>,
   pub last_scope_addr: ScopeAddress,
@@ -98,6 +99,7 @@ impl Default for AnalysisState {
       analysis: Analysis::new(defs),
       generic_bindings: HashMap::new(),
       granulate_fillable_state: FillableState::Absent,
+      map_fillable_state: FillableState::Absent,
       oscillator_fillable_state: FillableState::Absent,
       initting_var_opt: None,
       last_scope_addr: INITIAL_SCOPE_ADDRESS.clone(),
@@ -108,19 +110,23 @@ impl Default for AnalysisState {
 }
 
 impl AnalysisState {
-  pub fn find_generic_bindings(&mut self, base: OT, got: &OT) -> OT {
-    match base {
-      OT::Generic(name) if let Some(existing_binding) = self.generic_bindings.get(&name) => {
+  pub fn bind_generic(&mut self, base: OT, got: &OT) -> OT {
+    match (base, got) {
+      (OT::Generic(name), _) if let Some(existing_binding) = self.generic_bindings.get(&name) => {
         existing_binding.clone()
       },
-      OT::Generic(name) => {
-        self.generic_bindings.insert(name, got.clone());
+      (OT::Generic(name), other) => {
+        self.generic_bindings.insert(name, other.clone());
         got.clone()
       },
-      OT::List(inner) if let OT::List(inner_got) = got => {
-        OT::List(Box::new(self.find_generic_bindings(*inner, inner_got)))
+      (other, OT::Generic(name)) => {
+        self.generic_bindings.insert(name.clone(), other);
+        got.clone()
       },
-      _ => base,
+      (OT::List(inner), _) if let OT::List(inner_got) = got => {
+        OT::List(Box::new(self.bind_generic(*inner, inner_got)))
+      },
+      (x, _) => x,
     }
   }
 

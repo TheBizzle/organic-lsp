@@ -28,6 +28,7 @@ pub enum AnalyzerErrorType {
   PhaseOnlyInOscillatorWaveform { end_offender: Token },
   PositionOnlyInGranulateShape { end_offender: Token },
   TypeMismatch { expected: OrganicType, got: OrganicType },
+  ValueOnlyInMapTemplate { end_offender: Token },
   VarCannotInitInTermsOfSelf,
 }
 

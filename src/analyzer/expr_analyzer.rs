@@ -5,7 +5,8 @@ use crate::core::address::{NamedVarAddress, ScopeAddress};
 
 use crate::analyzer::diagnostics::AnalyzerErrorType::{
   DuplicateParameter, ExtraArgument, MissingArgument, NeverValidFillable, NoSuchFn, NoSuchVariable,
-  PhaseOnlyInOscillatorWaveform, PositionOnlyInGranulateShape, TypeMismatch, VarCannotInitInTermsOfSelf,
+  PhaseOnlyInOscillatorWaveform, PositionOnlyInGranulateShape, TypeMismatch, ValueOnlyInMapTemplate,
+  VarCannotInitInTermsOfSelf,
 };
 
 use crate::analyzer::diagnostics::AnalyzerWarningType::{
@@ -69,6 +70,14 @@ fn crawl_filled_value(
         None
       }
     },
+    "value" => {
+      if state.map_fillable_state == InArg {
+        Some(OT::Generic("Input".to_string()))
+      } else {
+        push_error(state, token.clone(), ValueOnlyInMapTemplate { end_offender: ender.clone() });
+        None
+      }
+    },
     _ => {
       let name = symbol.name.clone();
       push_error(state, token.clone(), NeverValidFillable { name, end_offender: ender.clone() });
@@ -88,11 +97,15 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall)
 
     Some(addr) => {
       let granulate_fillable_state = state.granulate_fillable_state.clone();
+      let map_fillable_state = state.map_fillable_state.clone();
       let oscillator_fillable_state = state.oscillator_fillable_state.clone();
 
       match name.to_lowercase().as_str() {
         "granulate" if state.granulate_fillable_state == Absent => {
           state.granulate_fillable_state = InFunction;
+        },
+        "map" if state.map_fillable_state == Absent => {
+          state.map_fillable_state = InFunction;
         },
         "oscillator" if state.oscillator_fillable_state == Absent => {
           state.oscillator_fillable_state = InFunction;
@@ -115,6 +128,7 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall)
         .iter()
         .map(|Arg { name, value }| {
           let inner_granulate_fillable_state = state.granulate_fillable_state.clone();
+          let inner_map_fillable_state = state.map_fillable_state.clone();
           let inner_oscillator_fillable_state = state.oscillator_fillable_state.clone();
 
           match name.name.to_lowercase().as_str() {
@@ -122,7 +136,10 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall)
               state.oscillator_fillable_state = InArg;
             },
             "shape" if state.granulate_fillable_state == InFunction => {
-              state.granulate_fillable_state = InArg; //
+              state.granulate_fillable_state = InArg;
+            },
+            "template" if state.map_fillable_state == InFunction => {
+              state.map_fillable_state = InArg;
             },
             _ => {},
           }
@@ -131,6 +148,7 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall)
           let pram = ParamInfo(name.name.clone(), crawl_expr(state, value).unwrap_or(OT::Unknown), false);
 
           state.granulate_fillable_state = inner_granulate_fillable_state;
+          state.map_fillable_state = inner_map_fillable_state;
           state.oscillator_fillable_state = inner_oscillator_fillable_state;
 
           (mapping, pram)
@@ -150,6 +168,7 @@ pub(super) fn crawl_function_call(state: &mut AnalysisState, fn_call: &FuncCall)
       };
 
       state.granulate_fillable_state = granulate_fillable_state;
+      state.map_fillable_state = map_fillable_state;
       state.oscillator_fillable_state = oscillator_fillable_state;
 
       result
@@ -192,8 +211,7 @@ fn crawl_verified_function_call(
         push_error(state, token.clone(), ExtraArgument { name: key });
       },
       (Some((base_expected, _)), Some((got, _))) => {
-        let expected = state.find_generic_bindings(base_expected, &got);
-
+        let expected = state.bind_generic(base_expected.clone(), &got);
         if expected != got {
           if let Some(actual_token) = actual_tokens.remove(&key) {
             push_error(state, actual_token, TypeMismatch { expected, got });

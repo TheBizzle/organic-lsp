@@ -118,6 +118,11 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn can_open_sounds_swarm() {
+    test_no_problem("./Organic/examples/sounds/swarm").await;
+  }
+
+  #[tokio::test]
   async fn can_open_sounds_techno() {
     test_no_problem("./Organic/examples/sounds/techno").await;
   }

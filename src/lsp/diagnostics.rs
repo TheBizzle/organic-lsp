@@ -13,7 +13,7 @@ use crate::parser::diagnostics::ParserError::{
 use crate::analyzer::diagnostics::AnalyzerErrorType::{
   self, BadInternalState, DuplicateParameter, DuplicateVar, ExtraArgument, MissingArgument,
   NeverValidFillable, NoSuchFn, NoSuchVariable, PhaseOnlyInOscillatorWaveform, PositionOnlyInGranulateShape,
-  TypeMismatch, VarCannotInitInTermsOfSelf,
+  TypeMismatch, ValueOnlyInMapTemplate, VarCannotInitInTermsOfSelf,
 };
 
 use crate::analyzer::diagnostics::AnalyzerLintType::{self, CamelCase, SnakeCase};
@@ -56,6 +56,7 @@ pub enum DiagnosticCode {
   Analyzer_Error_PhaseOnlyInOscillatorWaveform,
   Analyzer_Error_PositionOnlyInGranulateShape,
   Analyzer_Error_TypeMismatch,
+  Analyzer_Error_ValueOnlyInMapTemplate,
   Analyzer_Error_VarCannotInitInTermsOfSelf,
   Analyzer_Lint_CamelCase,
   Analyzer_Lint_SnakeCase,
@@ -166,6 +167,14 @@ pub fn error_as_diagnostic(error: LspError) -> Diagnostic {
         offender.token_type
       );
       (as_range(&offender.source_loc), msg, DC::Analyzer_Error_TypeMismatch)
+    },
+    LspAnalyzerError { typ: ValueOnlyInMapTemplate { end_offender }, offender } => {
+      let msg = "`value` can only be filled within the `template` argument to `map`.";
+      (
+        as_range_locs(&offender.source_loc, &end_offender.source_loc),
+        msg.to_string(),
+        DC::Analyzer_Error_ValueOnlyInMapTemplate,
+      )
     },
     LspAnalyzerError { typ: VarCannotInitInTermsOfSelf, offender } => {
       let msg = format!("`{:?}` cannot be defined in terms of itself", offender.token_type);
