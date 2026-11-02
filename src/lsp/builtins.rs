@@ -103,7 +103,13 @@ pub(super) static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new
     (
       "sample",
       "FILL_IN",
-      HashMap::from([("file", "FILL_IN"), ("effects", "FILL_IN"), ("pan", "FILL_IN"), ("volume", "FILL_IN")]),
+      HashMap::from([
+        ("file", "FILL_IN"),
+        ("effects", "FILL_IN"),
+        ("length", "FILL_IN"),
+        ("pan", "FILL_IN"),
+        ("volume", "FILL_IN"),
+      ]),
     ),
     (
       "saw",
