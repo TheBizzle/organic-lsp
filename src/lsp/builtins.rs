@@ -108,6 +108,7 @@ pub(super) static DOCS: LazyLock<HashMap<&'static str, BuiltIn>> = LazyLock::new
         ("effects", "FILL_IN"),
         ("length", "FILL_IN"),
         ("pan", "FILL_IN"),
+        ("start", "FILL_IN"),
         ("volume", "FILL_IN"),
       ]),
     ),

@@ -363,6 +363,7 @@ static FUNCTIONS: LazyLock<[StdLibFn; 37]> = LazyLock::new(|| {
           PI(own("file"), OT::String, false),
           PI(own("effects"), OT::List(Box::new(OT::AudioEffect)), true),
           PI(own("length"), OT::Number, true),
+          PI(own("start"), OT::Number, true),
           PI(own("pan"), OT::Number, true),
           PI(own("volume"), OT::Number, true),
         ],
